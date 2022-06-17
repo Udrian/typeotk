@@ -11,47 +11,54 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Graphics
     internal class TKWindow : DesktopWindow
     {
         private TKGameService TKGameService { get; set; }
+
+        private TKGame TKGame { get; set; }
+
         private ILogger Logger { get; set; }
 
         public override void Initialize(string title, Vec2i position, Vec2i size, bool fullscreen = false, bool borderless = false)
         {
-            TKGameService.TKGame.Location = new Vector2i(position.X, position.Y);
-            TKGameService.TKGame.WindowState = fullscreen ? WindowState.Fullscreen : WindowState.Normal;
-            TKGameService.TKGame.WindowBorder = borderless ? WindowBorder.Hidden : WindowBorder.Fixed;
-            TKGameService.TKGame.Size = new Vector2i(size.X, size.Y);
-            TKGameService.TKGame.Title = title;
-            TKGameService.TKGame.Run();
+            var setting = new NativeWindowSettings
+            {
+                Location = new Vector2i(position.X, position.Y),
+                WindowState = fullscreen ? WindowState.Fullscreen : WindowState.Normal,
+                WindowBorder = borderless ? WindowBorder.Hidden : WindowBorder.Fixed,
+                Size = new Vector2i(size.X, size.Y),
+                Title = title
+            };
+
+            TKGame = TKGameService.CreateTKGameWindow(setting);
         }
 
         protected override void Cleanup()
         {
-            TKGameService.TKGame.Close();
+            TKGame.Close();
         }
 
         public override string Title
         {
-            get => TKGameService.TKGame.Title;
-            set => TKGameService.TKGame.Title = value;
+            get => TKGame.Title;
+            set => TKGame.Title = value;
         }
         public override Vec2i Position
         {
-            get => new Vec2i(TKGameService.TKGame.Location.X, TKGameService.TKGame.Location.Y);
-            set => TKGameService.TKGame.Location = new Vector2i(value.X, value.Y);
+            get => new Vec2i(TKGame.Location.X, TKGame.Location.Y);
+            set => TKGame.Location = new Vector2i(value.X, value.Y);
         }
         public override Vec2i Size
         {
-            get => new Vec2i(TKGameService.TKGame.Size.X, TKGameService.TKGame.Size.Y);
-            set => TKGameService.TKGame.Size = new Vector2i(value.X, value.Y);
+            get => new Vec2i(TKGame.Size.X, TKGame.Size.Y);
+            set => TKGame.Size = new Vector2i(value.X, value.Y);
         }
         public override bool Fullscreen
         {
-            get => TKGameService.TKGame.IsFullscreen;
-            set => TKGameService.TKGame.WindowState = value ? WindowState.Fullscreen : WindowState.Normal;
+            get => TKGame.IsFullscreen;
+            set => TKGame.WindowState = value ? WindowState.Fullscreen : WindowState.Normal;
         }
         public override bool Borderless
         {
-            get => TKGameService.TKGame.WindowBorder == WindowBorder.Hidden;
-            set => TKGameService.TKGame.WindowBorder = value ? WindowBorder.Hidden : WindowBorder.Fixed;
+            get => TKGame.WindowBorder == WindowBorder.Hidden;
+            set => TKGame.WindowBorder = value ? WindowBorder.Hidden : WindowBorder.Fixed;
         }
     }
 }

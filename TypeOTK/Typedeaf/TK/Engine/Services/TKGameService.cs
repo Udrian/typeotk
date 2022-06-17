@@ -8,17 +8,26 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
     /// </summary>
     public class TKGameService : Service
     {
-        internal TKGame TKGame { get; set; }
+        internal List<TKGame> TKGames { get; set; }
 
         /// <inheritdoc/>
         protected override void Initialize()
         {
-            TKGame = new TKGame(GameWindowSettings.Default, new NativeWindowSettings());
+            TKGames = new List<TKGame>();
         }
 
         /// <inheritdoc/>
         protected override void Cleanup()
         {
+        }
+
+        internal TKGame CreateTKGameWindow(NativeWindowSettings nativeWindowSettings)
+        {
+            var game = new TKGame(GameWindowSettings.Default, nativeWindowSettings);
+            TKGames.Add(game);
+            game.Run();
+
+            return game;
         }
     }
 }
