@@ -18,8 +18,6 @@ namespace TypeOEngine.Typedeaf.TK
             /// </summary>
             public TKGameWindow TKGame { get; set; }
 
-            public RectanglePrimitive RectanglePrimitive { get; private set; }
-
             public Shader Shader { get; private set; }
 
             public Matrix4 ViewMatrix { get; set; }
@@ -32,8 +30,6 @@ namespace TypeOEngine.Typedeaf.TK
                 Viewport = viewport;
                 WorldMatrix = new Matrix();
                 TKGame = tKGame;
-
-                RectanglePrimitive = new RectanglePrimitive();
 
                 Shader = new Shader("shader.vert", "shader.frag");
                 Shader.Use();
