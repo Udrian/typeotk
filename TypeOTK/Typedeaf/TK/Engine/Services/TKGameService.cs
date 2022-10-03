@@ -10,13 +10,20 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
     public class TKGameService : Service, IUpdatable
     {
         internal List<TKGameWindow> TKGames { get; set; }
+
+        /// <inheritdoc/>
         public bool Pause { get; set; }
+
+        /// <inheritdoc/>
+        public TKGameService()
+        {
+            TKGames = new List<TKGameWindow>();
+        }
 
         /// <inheritdoc/>
         protected override void Initialize()
         {
             Pause = false;
-            TKGames = new List<TKGameWindow>();
         }
 
         /// <inheritdoc/>
@@ -36,6 +43,18 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
         public void Update(double dt)
         {
             NativeWindow.ProcessWindowEvents(false);
+
+            for(var i = 0; i < TKGames.Count; i++)
+            {
+                if (!TKGames[i].Exists || TKGames[i].IsExiting)
+                {
+                    TKGames[i].Dispose();
+                    TKGames.RemoveAt(i);
+                    i--;
+                }
+            }
+            if (TKGames.Count == 0)
+                Context.Exit();
         }
     }
 }
