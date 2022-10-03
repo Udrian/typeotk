@@ -31,7 +31,7 @@ namespace TypeOEngine.Typedeaf.TK
                 WorldMatrix = new Matrix();
                 TKGame = tKGame;
 
-                Shader = new Shader("shader.vert", "shader.frag");
+                Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
                 Shader.Use();
 
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
