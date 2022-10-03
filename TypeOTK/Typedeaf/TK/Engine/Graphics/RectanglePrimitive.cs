@@ -7,9 +7,12 @@ namespace TypeOEngine.Typedeaf.TK
         /// <summary>
         /// Rectanglugar GL Primitive
         /// </summary>
-        public class RectanglePrimitive : IndicedPrimitive
+        public class RectanglePrimitive : IndicedPrimitive<Vertex>
         {
             private Vec2 size;
+            /// <summary>
+            /// Width and Height of the Rectangle
+            /// </summary>
             public Vec2 Size
             {
                 get { return size; }
@@ -24,10 +27,17 @@ namespace TypeOEngine.Typedeaf.TK
                 }
             }
 
+            /// <summary>
+            /// Rectangle primitive with a width and height of 1
+            /// </summary>
             public RectanglePrimitive() : this(new Vec2(1))
             {
             }
 
+            /// <summary>
+            /// Rectangle primitive with a specified size
+            /// </summary>
+            /// <param name="size">Width and Height of the Rectangle</param>
             public RectanglePrimitive(Vec2 size) : base(4, 0)
             {
                 Size = size;

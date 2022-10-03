@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using TypeOEngine.Typedeaf.TK.Engine.Graphics.Interfaces;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -7,7 +8,7 @@ namespace TypeOEngine.Typedeaf.TK
         /// <summary>
         /// Base class for indiced GL primitives
         /// </summary>
-        public class IndicedPrimitive : Primitive
+        public class IndicedPrimitive<T> : Primitive<T> where T : struct, IVertex
         {
             /// <summary>
             /// Verticies indices associated with the Primitive
@@ -19,6 +20,11 @@ namespace TypeOEngine.Typedeaf.TK
             public bool Wireframe { get; set; }
             private int ElementBufferID { get; set; }
 
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            /// <param name="vertexCount"><inheritdoc/></param>
+            /// <param name="indiceCount">The number of indices</param>
             public IndicedPrimitive(int vertexCount, int indiceCount) : base(vertexCount)
             {
                 Indices = new uint[indiceCount];
@@ -27,6 +33,7 @@ namespace TypeOEngine.Typedeaf.TK
                 Wireframe = false;
             }
 
+            /// <inheritdoc/>
             protected override void PreDraw()
             {
                 base.PreDraw();
@@ -35,6 +42,7 @@ namespace TypeOEngine.Typedeaf.TK
                 GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices, BufferUsageHint.DynamicDraw);
             }
 
+            /// <inheritdoc/>
             protected override void InternalDraw()
             {
                 if(Wireframe)

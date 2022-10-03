@@ -1,4 +1,5 @@
 ﻿using TypeOEngine.Typedeaf.Core.Common;
+using TypeOEngine.Typedeaf.TK.Engine.Graphics.Interfaces;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -7,10 +8,10 @@ namespace TypeOEngine.Typedeaf.TK
         /// <summary>
         /// Default Vertex implementation, contains Position
         /// </summary>
-        public struct Vertex
+        public struct Vertex : IVertex
         {
             /// <inheritdoc/>
-            public static int Size { get { return sizeof(double) * 3; } }
+            public int Size { get { return sizeof(double) * 3; } }
 
             /// <summary>
             /// Vertex Position

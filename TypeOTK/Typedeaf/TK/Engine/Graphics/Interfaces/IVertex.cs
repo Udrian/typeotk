@@ -8,9 +8,9 @@
         public interface IVertex
         {
             /// <summary>
-            /// Size of the entire Vertex
+            /// Calculate the memory size of each Vertex
             /// </summary>
-            public static int Size { get; }
+            public int Size { get; }
         }
     }
 }
