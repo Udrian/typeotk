@@ -1,19 +1,22 @@
 ﻿using OpenTK.Windowing.Desktop;
 using TypeOEngine.Typedeaf.Core.Engine.Services;
+using TypeOEngine.Typedeaf.Core.Interfaces;
 
 namespace TypeOEngine.Typedeaf.TK.Engine.Services
 {
     /// <summary>
     /// Service that holds a instance to the OpenTK Game window implementation
     /// </summary>
-    public class TKGameService : Service
+    public class TKGameService : Service, IUpdatable
     {
-        internal List<TKGame> TKGames { get; set; }
+        internal List<TKGameWindow> TKGames { get; set; }
+        public bool Pause { get; set; }
 
         /// <inheritdoc/>
         protected override void Initialize()
         {
-            TKGames = new List<TKGame>();
+            Pause = false;
+            TKGames = new List<TKGameWindow>();
         }
 
         /// <inheritdoc/>
@@ -21,13 +24,18 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
         {
         }
 
-        internal TKGame CreateTKGameWindow(NativeWindowSettings nativeWindowSettings)
+        public TKGameWindow CreateTKGameWindow(NativeWindowSettings nativeWindowSettings)
         {
-            var game = new TKGame(GameWindowSettings.Default, nativeWindowSettings);
+            var game = new TKGameWindow(nativeWindowSettings);
             TKGames.Add(game);
-            game.Run();
 
             return game;
+        }
+
+        /// <inheritdoc/>
+        public void Update(double dt)
+        {
+            NativeWindow.ProcessWindowEvents(false);
         }
     }
 }

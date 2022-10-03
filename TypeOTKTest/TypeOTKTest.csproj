@@ -29,12 +29,6 @@
     <Reference Include="TypeOCore">
       <HintPath>..\TypeOTK\$(OutDir)TypeOCore.dll</HintPath>
     </Reference>
-    <Reference Include="TypeODesktop">
-      <HintPath>..\TypeOTK\$(OutDir)TypeODesktop.dll</HintPath>
-    </Reference>
-    <Reference Include="TypeOBasic2d">
-      <HintPath>..\TypeOTK\$(OutDir)TypeOBasic2d.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

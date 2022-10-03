@@ -14,11 +14,21 @@
 		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/dependency.py -p $(ProjectDir)../&quot;" />
 	</Target>
 	<ItemGroup>
-		<PackageReference Include="OpenTK" Version="4.7.2" />
+	  <None Remove="shader.frag" />
+	  <None Remove="shader.vert" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="shader.frag">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="shader.vert">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="OpenTK" Version="4.7.4" />
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
 		<ProjectReference Name="TypeOCore" Include="D:/projects/typeo/typeocore/TypeOCore/TypeOCore.csproj" />
-		<ProjectReference Name="TypeODesktop" Include="D:/projects/typeo/typeodesktop/TypeODesktop/TypeODesktop.csproj" />
-		<ProjectReference Name="TypeOBasic2d" Include="D:/projects/typeo/typeobasic2d/TypeOBasic2d/TypeOBasic2d.csproj" />
 	</ItemGroup>
 </Project>
