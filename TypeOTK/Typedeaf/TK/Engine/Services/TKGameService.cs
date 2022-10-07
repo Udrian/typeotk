@@ -9,7 +9,10 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
     /// </summary>
     public class TKGameService : Service, IUpdatable
     {
-        internal List<TKGameWindow> TKGames { get; set; }
+        /// <summary>
+        /// List of currently open Game Windows
+        /// </summary>
+        public List<TKGameWindow> TKGames { get; private set; }
 
         /// <inheritdoc/>
         public bool Pause { get; set; }
@@ -31,6 +34,11 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
         {
         }
 
+        /// <summary>
+        /// Creates a new Native TK Game Window
+        /// </summary>
+        /// <param name="nativeWindowSettings">Window settings</param>
+        /// <returns>The newly created window</returns>
         public TKGameWindow CreateTKGameWindow(NativeWindowSettings nativeWindowSettings)
         {
             var game = new TKGameWindow(nativeWindowSettings);
