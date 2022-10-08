@@ -19,6 +19,7 @@ namespace TypeOEngine.Typedeaf.TK
             public TKGameWindow TKGame { get; set; }
 
             public Shader Shader { get; private set; }
+            public Shader TextureShader { get; private set; }
 
             public Matrix4 ViewMatrix { get; set; }
             public Matrix4 ProjectionMatrix { get; set; }
@@ -32,10 +33,13 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGame = tKGame;
 
                 Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
-                Shader.Use();
+                TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
 
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
                 ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(0, (float)viewport.Size.X, (float)viewport.Size.Y, 0, -1.0f, 100.0f);
+
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             }
              
             /// <inheritdoc/>

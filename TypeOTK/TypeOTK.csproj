@@ -14,6 +14,12 @@
 		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/dependency.py -p $(ProjectDir)../&quot;" />
 	</Target>
 	<ItemGroup>
+	  <Content Include="Shaders\tshader.frag">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Shaders\tshader.vert">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	  <Content Include="Shaders\shader.frag">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </Content>
@@ -22,7 +28,7 @@
 	  </Content>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="OpenTK" Version="4.7.4" />
+		<PackageReference Include="OpenTK" Version="4.7.5" />
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
 		<ProjectReference Name="TypeOCore" Include="D:/projects/typeo/typeocore/TypeOCore/TypeOCore.csproj" />

@@ -3,7 +3,7 @@ using TypeOEngine.Typedeaf.TK.Engine.Graphics.Interfaces;
 
 namespace TypeOEngine.Typedeaf.TK
 {
-    namespace Engine.Graphics
+    namespace Engine.Graphics.Primitives
     {
         /// <summary>
         /// Base class for GL Primitives
@@ -75,6 +75,7 @@ namespace TypeOEngine.Typedeaf.TK
                 GL.BindVertexArray(VertexArrayID);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferID);
                 GL.EnableVertexAttribArray(0);
+                //TODO: should be able to define the vertex attribute pointers
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Double, false, Vertices[0].Size, 0);
                 GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * Vertices[0].Size, Vertices, BufferUsageHint.DynamicDraw);
             }

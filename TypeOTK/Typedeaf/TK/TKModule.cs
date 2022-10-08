@@ -1,4 +1,6 @@
 ﻿using TypeOEngine.Typedeaf.Core.Engine;
+using TypeOEngine.Typedeaf.Core.Engine.Contents;
+using TypeOEngine.Typedeaf.TK.Contents;
 using TypeOEngine.Typedeaf.TK.Engine.Services;
 
 namespace TypeOEngine.Typedeaf.TK
@@ -18,6 +20,7 @@ namespace TypeOEngine.Typedeaf.TK
         protected override void LoadExtensions(TypeO typeO)
         {
             typeO.AddService<TKGameService>();
+            typeO.BindContent<Texture, TKTexture>();
         }
     }
 }

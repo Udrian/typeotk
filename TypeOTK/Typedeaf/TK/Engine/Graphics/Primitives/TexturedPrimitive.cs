@@ -1,13 +1,14 @@
-﻿using TypeOEngine.Typedeaf.Core.Common;
+﻿using OpenTK.Graphics.OpenGL4;
+using TypeOEngine.Typedeaf.Core.Common;
 
 namespace TypeOEngine.Typedeaf.TK
 {
-    namespace Engine.Graphics
+    namespace Engine.Graphics.Primitives
     {
         /// <summary>
-        /// Rectanglugar GL Primitive
+        /// Textured GL primitive
         /// </summary>
-        public class RectanglePrimitive : IndicedPrimitive<Vertex>
+        public class TexturedPrimitive : IndicedPrimitive<TexturedVertex>
         {
             private Vec2 size;
             /// <summary>
@@ -30,7 +31,7 @@ namespace TypeOEngine.Typedeaf.TK
             /// <summary>
             /// Rectangle primitive with a width and height of 1
             /// </summary>
-            public RectanglePrimitive() : this(new Vec2(1))
+            public TexturedPrimitive() : this(new Vec2(1))
             {
             }
 
@@ -38,14 +39,34 @@ namespace TypeOEngine.Typedeaf.TK
             /// Rectangle primitive with a specified size
             /// </summary>
             /// <param name="size">Width and Height of the Rectangle</param>
-            public RectanglePrimitive(Vec2 size) : base(4, 0)
+            public TexturedPrimitive(Vec2 size) : base(4, 0)
             {
                 Size = size;
+
+                Vertices[0].TexCoord = new Vec2(1, 0);
+                Vertices[1].TexCoord = new Vec2(1, 1);
+                Vertices[2].TexCoord = new Vec2(0, 1);
+                Vertices[3].TexCoord = new Vec2(0, 0);
 
                 Indices = new uint[]{
                     0, 1, 3,
                     1, 2, 3
                 };
+            }
+
+            /// <inheritdoc/>
+            protected override void PreDraw()
+            {
+                base.PreDraw();
+                GL.EnableVertexAttribArray(1);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Double, false, Vertices[0].Size, 3 * sizeof(double));
+            }
+
+            /// <inheritdoc/>
+            protected override void PostDraw()
+            {
+                base.PostDraw();
+                GL.DisableVertexAttribArray(1);
             }
         }
     }

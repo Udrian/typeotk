@@ -3,7 +3,7 @@ using TypeOEngine.Typedeaf.TK.Engine.Graphics.Interfaces;
 
 namespace TypeOEngine.Typedeaf.TK
 {
-    namespace Engine.Graphics
+    namespace Engine.Graphics.Primitives
     {
         /// <summary>
         /// Base class for indiced GL primitives
