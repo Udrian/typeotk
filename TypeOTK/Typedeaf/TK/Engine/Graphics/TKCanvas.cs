@@ -3,6 +3,7 @@ using OpenTK.Mathematics;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics.Interfaces;
+using TypeOEngine.Typedeaf.TK.Contents;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -47,11 +48,20 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 GL.ClearColor(clearColor.Rf, clearColor.Gf, clearColor.Bf, clearColor.Af);
                 GL.Clear(ClearBufferMask.ColorBufferBit);
+                TKFont.Drawing.DrawingPrimitives.Clear();
+                var error = GL.GetError();
+                if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
+                {
+                    throw new Exception("Error: " + error.ToString());
+                }
             }
 
             /// <inheritdoc/>
             public override void Present()
             {
+
+                TKFont.Drawing.RefreshBuffers();
+                TKFont.Drawing.Draw();
                 TKGame.Context.SwapBuffers();
             }
         }

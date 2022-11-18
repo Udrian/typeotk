@@ -133,7 +133,7 @@ namespace TypeOEngine.Typedeaf.TK
                 CheckError();
             }
 
-            private void CheckError()
+            public void CheckError()
             {
                 var error = GL.GetError();
                 if (error != ErrorCode.NoError)

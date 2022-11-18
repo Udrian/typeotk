@@ -20,6 +20,7 @@ namespace TypeOEngine.Typedeaf.TK
         protected override void LoadExtensions(TypeO typeO)
         {
             typeO.AddService<TKGameService>();
+            typeO.BindContent<Font, TKFont>();
             typeO.BindContent<Texture, TKTexture>();
         }
     }
