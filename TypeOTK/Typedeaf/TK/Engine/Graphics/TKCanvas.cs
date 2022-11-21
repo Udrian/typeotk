@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using QuickFont;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics.Interfaces;
@@ -59,10 +60,20 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void Present()
             {
-
                 TKFont.Drawing.RefreshBuffers();
                 TKFont.Drawing.Draw();
                 TKGame.Context.SwapBuffers();
+            }
+
+            /// <inheritdoc/>
+            public override void PreDraw()
+            {
+                TKFont.Drawing.ProjectionMatrix = ProjectionMatrix * Matrix4.CreateScale(1, -1, 1);
+            }
+
+            /// <inheritdoc/>
+            public override void PostDraw()
+            {
             }
         }
     }

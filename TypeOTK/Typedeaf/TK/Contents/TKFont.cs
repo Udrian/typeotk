@@ -4,6 +4,7 @@ using QuickFont;
 using QuickFont.Configuration;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
+using TypeOEngine.Typedeaf.TK.Engine.Graphics;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -60,9 +61,8 @@ namespace TypeOEngine.Typedeaf.TK
                 return new Vec2(size.Width, size.Height);
             }
 
-            public void Draw(Matrix4 projection, string text, Vec2 position, Color color)
+            public void Draw(string text, Vec2 position, Color color)
             {
-                Drawing.ProjectionMatrix = projection * Matrix4.CreateScale(1, -1, 1);
                 Drawing.Print(QFont, text, new Vector3((float)position.X, (float)position.Y, 0), QFontAlignment.Left, System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B));
                 var error = GL.GetError();
                 if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
