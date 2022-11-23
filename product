@@ -1,7 +1,7 @@
 {
     "name": "TypeOTK",
     "version": "0.1.0",
-    "externals": [],
+    "externals": ["QuickFont.Desktop.dll", "SharpFont.NetStandard.dll", "freetype6.dll"],
     "dependencies": [
         "TypeOCore-0.1.0"
     ],

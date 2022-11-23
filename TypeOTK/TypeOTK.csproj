@@ -11,7 +11,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/dependency.py -p $(ProjectDir)../&quot;" />
+		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.py dependency -p $(ProjectDir)../&quot;" />
 	</Target>
 	<ItemGroup>
 	  <Content Include="Shaders\tshader.frag">
