@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -22,7 +22,7 @@
 		<ProjectReference Include="..\TypeOTK\TypeOTK.csproj" />
 		<ProjectReference Include="..\TypeDTK\TypeDTK.csproj" />
 	</ItemGroup>
-	<ItemGroup>
+    <ItemGroup>
 		<Reference Include="TypeOCore">
 			<HintPath>..\TypeOTK\$(OutDir)TypeOCore.dll</HintPath>
 		</Reference>
@@ -42,6 +42,9 @@
 	  <Folder Include="Mock\Resources\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Update="Mock\Resources\Lato-Black.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Mock\Resources\texture.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>

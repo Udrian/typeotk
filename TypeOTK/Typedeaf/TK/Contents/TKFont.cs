@@ -19,6 +19,10 @@ namespace TypeOEngine.Typedeaf.TK
             /// QFontDrawing used to handle the OpenTK implementation of drawing fonts
             /// </summary>
             public static QFontDrawing Drawing = new QFontDrawing();
+            /// <summary>
+            /// Sets to true when Font have been loaded for the first time.
+            /// </summary>
+            public bool FontLoaded { get; internal set; }
             private QFont QFont { get; set; }
 
             /// <inheritdoc/>
@@ -35,7 +39,10 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void Load(string path, ContentLoader contentLoader)
             {
-                Load(path);
+                if(!File.Exists(path))
+                {
+                    throw new FileNotFoundException();
+                }
             }
 
             private void Load(string path)
@@ -46,6 +53,7 @@ namespace TypeOEngine.Typedeaf.TK
                 {
                     throw new Exception("Error: " + error.ToString());
                 }
+                FontLoaded = true;
             }
 
             /// <inheritdoc/>
