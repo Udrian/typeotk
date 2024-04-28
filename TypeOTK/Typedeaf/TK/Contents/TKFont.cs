@@ -4,7 +4,7 @@ using QuickFont;
 using QuickFont.Configuration;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
-using TypeOEngine.Typedeaf.TK.Engine.Graphics;
+using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
 {

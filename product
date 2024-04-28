@@ -4,7 +4,8 @@
     "externals": ["QuickFont.Desktop.dll", "SharpFont.NetStandard.dll", "freetype6.dll"],
     "dependencies": [
         "TypeOCore-0.1.0",
-        "TypeD-0.1.0;dev"
+        "TypeD-0.1.0;dev",
+        "TypeODesktop-0.1.0;dev"
     ],
     "type": "Module",
     "devModuleName": "TypeDTK",

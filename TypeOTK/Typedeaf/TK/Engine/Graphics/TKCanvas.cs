@@ -1,10 +1,11 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using QuickFont;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics.Interfaces;
 using TypeOEngine.Typedeaf.TK.Contents;
+using Color = TypeOEngine.Typedeaf.Core.Common.Color;
+using Rectangle = TypeOEngine.Typedeaf.Core.Common.Rectangle;
 
 namespace TypeOEngine.Typedeaf.TK
 {

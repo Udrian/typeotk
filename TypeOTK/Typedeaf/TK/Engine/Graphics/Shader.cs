@@ -2,6 +2,7 @@
 using OpenTK.Mathematics;
 using System.Text;
 using TypeOEngine.Typedeaf.Core.Common;
+using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
 {
