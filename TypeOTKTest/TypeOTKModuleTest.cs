@@ -6,6 +6,7 @@ using TypeOTKTest.Mock;
 using TypeOEngine.Typedeaf.TK.Engine.Services;
 using TypeOEngine.Typedeaf.Core.Common;
 using System.IO;
+using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOTKTest;
 
@@ -93,5 +94,7 @@ public partial class TypeOTKModuleTest
 
         var sizeBig = tkFont.MeasureString("Test");
         Assert.Equal(new Vec2(252, 128), sizeBig);
+
+        tkFont.Draw("Hello", new Vec2(100, 100), Color.CapeHoney);
     }
 }
