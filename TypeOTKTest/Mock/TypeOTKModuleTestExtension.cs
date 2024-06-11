@@ -1,6 +1,8 @@
 ﻿using OpenTK.Windowing.Desktop;
+using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.TK;
+using TypeOEngine.Typedeaf.TK.Engine.Graphics;
 using TypeOEngine.Typedeaf.TK.Engine.Services;
 using TypeOTKTest.Mock;
 

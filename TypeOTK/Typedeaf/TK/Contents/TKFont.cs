@@ -3,7 +3,9 @@ using OpenTK.Mathematics;
 using QuickFont;
 using QuickFont.Configuration;
 using TypeOEngine.Typedeaf.Core.Common;
+using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
+using TypeOEngine.Typedeaf.Core.Engine.Interfaces;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
@@ -19,11 +21,8 @@ namespace TypeOEngine.Typedeaf.TK
             /// QFontDrawing used to handle the OpenTK implementation of drawing fonts
             /// </summary>
             public static QFontDrawing Drawing = new QFontDrawing();
-            /// <summary>
-            /// Sets to true when Font have been loaded for the first time.
-            /// </summary>
-            public bool FontLoaded { get; internal set; }
             private QFont QFont { get; set; }
+            private ILogger Logger { get; set; }
 
             /// <inheritdoc/>
             public override int FontSize
@@ -37,23 +36,14 @@ namespace TypeOEngine.Typedeaf.TK
             }
 
             /// <inheritdoc/>
-            public override void Load(string path, ContentLoader contentLoader)
-            {
-                if(!File.Exists(path))
-                {
-                    throw new FileNotFoundException();
-                }
-            }
-
-            private void Load(string path)
+            protected override void Load(string path)
             {
                 QFont = new QFont(path, FontSize, new QFontBuilderConfiguration());
                 var error = GL.GetError();
                 if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
                 {
-                    throw new Exception("Error: " + error.ToString());
+                    Logger.Log(LogLevel.Error, $"Error loading Font '{FilePath}' with the error: '{error.ToString()}'");
                 }
-                FontLoaded = true;
             }
 
             /// <inheritdoc/>
@@ -75,7 +65,7 @@ namespace TypeOEngine.Typedeaf.TK
                 var error = GL.GetError();
                 if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
                 {
-                    throw new Exception("Error: " + error.ToString());
+                    Logger.Log(LogLevel.Error, $"Error drawing Font '{FilePath}' with the error: '{error.ToString()}'");
                 }
             }
         }

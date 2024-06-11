@@ -15,13 +15,27 @@ namespace TypeOEngine.Typedeaf.TK
             private Image<Rgba32> RgbaImage { get; set; }
 
             /// <inheritdoc/>
-            public override void Load(string path, ContentLoader contentLoader)
+            protected override void Load(string path)
             {
                 Handle = GL.GenTexture();
                 Use();
 
-                RgbaImage = Image.Load<Rgba32>(path);
-                Size = new Vec2(RgbaImage.Width, RgbaImage.Height);
+                Load(Image.Load<Rgba32>(path));
+            }
+
+            /// <inheritdoc/>
+            protected override void Create(Vec2i size, ReadOnlySpan<byte> data)
+            {
+                Handle = GL.GenTexture();
+                Use();
+
+                Load(Image.LoadPixelData<Rgba32>(data, size.X, size.Y));
+            }
+
+            private void Load(Image<Rgba32> image)
+            {
+                RgbaImage = image;
+                Size = new Vec2i(RgbaImage.Width, RgbaImage.Height);
 
                 //Convert ImageSharp's format into a byte array, so we can use it with OpenGL.
                 var pixels = new List<byte>(4 * RgbaImage.Width * RgbaImage.Height);
