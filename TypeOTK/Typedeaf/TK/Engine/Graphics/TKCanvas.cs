@@ -1,8 +1,12 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Core.Common;
+using TypeOEngine.Typedeaf.Core.Engine.Contents;
+using TypeOEngine.Typedeaf.Core.Engine.Contents.ContentExtensions;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics.Interfaces;
+using TypeOEngine.Typedeaf.Core.Interfaces;
 using TypeOEngine.Typedeaf.TK.Contents;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 using Rectangle = TypeOEngine.Typedeaf.Core.Common.Rectangle;
@@ -14,7 +18,7 @@ namespace TypeOEngine.Typedeaf.TK
         /// <summary>
         /// TK Implementation of Canvas, contains the supplied TKGame object
         /// </summary>
-        public class TKCanvas : Canvas
+        public class TKCanvas : Canvas, IHasGame
         {
             /// <summary>
             /// TKGame attached to the Canvas
@@ -26,6 +30,8 @@ namespace TypeOEngine.Typedeaf.TK
 
             public Matrix4 ViewMatrix { get; set; }
             public Matrix4 ProjectionMatrix { get; set; }
+
+            public Game Game { get; set; }
 
             /// <inheritdoc/>
             public TKCanvas(IWindow window, Rectangle viewport, TKGameWindow tKGame) : base(window, viewport, new Matrix())
@@ -75,6 +81,16 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void PostDraw()
             {
+            }
+
+            /// <inheritdoc/>
+            public override Texture Screenshot(Rectangle screenRect)
+            {
+                byte[] data = new byte[(int)screenRect.Size.X * (int)screenRect.Size.Y * 4];
+                GL.ReadBuffer(ReadBufferMode.Front);
+                GL.ReadPixels((int)screenRect.Pos.X, (int)screenRect.Pos.Y, (int)screenRect.Size.X, (int)screenRect.Size.Y, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+
+                return Game.ContentLoader.CreateTexture<TKTexture>(new Vec2i((int)screenRect.Size.X, (int)screenRect.Size.Y), new ReadOnlySpan<byte>(data));
             }
         }
     }

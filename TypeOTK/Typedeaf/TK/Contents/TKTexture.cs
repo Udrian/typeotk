@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
+using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -73,6 +74,23 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 GL.ActiveTexture(unit);
                 GL.BindTexture(TextureTarget.Texture2D, Handle);
+            }
+
+            /// <inheritdoc/>
+            public override void Save(string path)
+            {
+                if(!Directory.Exists(Path.GetDirectoryName(path)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                }
+                RgbaImage.Save(path);
+            }
+
+            /// <inheritdoc/>
+            public override Color PixelAt(int x, int y)
+            {
+                var pixel = RgbaImage[x, y];
+                return new Color(pixel.A, pixel.R, pixel.G, pixel.B);
             }
         }
     }
