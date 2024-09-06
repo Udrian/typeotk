@@ -45,7 +45,8 @@ namespace TypeOEngine.Typedeaf.TK
                 TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
 
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
-                ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(0, (float)viewport.Size.X, (float)viewport.Size.Y, 0, -1.0f, 100.0f);
+                //TODO: Take a second look at this, shouldn't have to but left and top on -1
+                ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(-1, (float)viewport.Size.X-1, (float)viewport.Size.Y, -1, -1.0f, 100.0f);
 
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -69,7 +70,7 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 TKFont.Drawing.RefreshBuffers();
                 TKFont.Drawing.Draw();
-                TKGame.Context.SwapBuffers();
+                TKGame?.Context.SwapBuffers();
             }
 
             /// <inheritdoc/>
@@ -90,7 +91,10 @@ namespace TypeOEngine.Typedeaf.TK
                 GL.ReadBuffer(ReadBufferMode.Front);
                 GL.ReadPixels((int)screenRect.Pos.X, (int)screenRect.Pos.Y, (int)screenRect.Size.X, (int)screenRect.Size.Y, PixelFormat.Rgba, PixelType.UnsignedByte, data);
 
-                return Game.ContentLoader.CreateTexture<TKTexture>(new Vec2i((int)screenRect.Size.X, (int)screenRect.Size.Y), new ReadOnlySpan<byte>(data));
+                var texture = Game.ContentLoader.CreateTexture<TKTexture>(new Vec2i((int)screenRect.Size.X, (int)screenRect.Size.Y), new ReadOnlySpan<byte>(data));
+                texture.FlipVertical();
+
+                return texture;
             }
         }
     }

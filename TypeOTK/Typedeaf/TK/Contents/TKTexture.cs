@@ -1,4 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
@@ -91,6 +94,18 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 var pixel = RgbaImage[x, y];
                 return new Color(pixel.A, pixel.R, pixel.G, pixel.B);
+            }
+
+            /// <inheritdoc/>
+            public override void FlipVertical()
+            {
+                RgbaImage.Mutate(x => x.Flip(FlipMode.Vertical));
+            }
+
+            /// <inheritdoc/>
+            public override void FlipHorizontal()
+            {
+                RgbaImage.Mutate(x => x.Flip(FlipMode.Horizontal));
             }
         }
     }

@@ -26,12 +26,22 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
         /// <inheritdoc/>
         protected override void Initialize()
         {
-            Pause = false;
         }
 
         /// <inheritdoc/>
         protected override void Cleanup()
         {
+            for (var i = 0; i < TKGames.Count; i++)
+            {
+                TKGames[i].Close();
+                TKGames[i].Dispose();
+                while (TKGames[i].IsExiting)
+                {
+                    NativeWindow.ProcessWindowEvents(false);
+                }
+                TKGames.RemoveAt(i);
+                i--;
+            }
         }
 
         /// <summary>

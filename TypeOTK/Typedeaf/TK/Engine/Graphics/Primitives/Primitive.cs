@@ -29,14 +29,15 @@ namespace TypeOEngine.Typedeaf.TK
             /// Create a uninitialized Primitive of specified length
             /// </summary>
             /// <param name="vertexCount">The number of vertices</param>
-            public Primitive(int vertexCount)
+            /// <param name="primitiveDrawType">How the primitives should be drawn; Point, Line or Triangle. Defaults to Line</param>
+            public Primitive(int vertexCount, PrimitiveDrawType primitiveDrawType = PrimitiveDrawType.Line)
             {
                 Vertices = new T[vertexCount];
 
                 VertexArrayID = GL.GenVertexArray();
                 VertexBufferID = GL.GenBuffer();
 
-                PrimitiveDrawType = PrimitiveDrawType.Line;
+                PrimitiveDrawType = primitiveDrawType;
             }
 
             /// <summary>
