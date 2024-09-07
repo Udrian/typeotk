@@ -32,7 +32,7 @@ namespace TypeDTK.View.Viewer
         public override void Draw()
         {
             if (Canvas == null) return;
-            Canvas.Clear(Color.Brown);
+            Canvas.Clear(Color.Gray);
             Scenes.Draw();
             Canvas.Present();
         }

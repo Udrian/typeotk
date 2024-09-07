@@ -63,7 +63,7 @@ public partial class TKViewer : UserControl, IViewer
 
     private void OnRender(TimeSpan delta)
     {
-        Viewer.Update(delta.Milliseconds);
+        Viewer.Update(delta.Milliseconds/1000d);
         Viewer.Draw();
     }
     private void SetWindowSize(Size size)
