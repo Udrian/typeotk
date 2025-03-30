@@ -28,7 +28,8 @@ namespace TypeDTK.View.Viewer
 
         public void Start()
         {
-            FakeTypeO.Start();
+            if(!FakeTypeO.Context.Game.Initialized)
+                FakeTypeO.Start();
         }
 
         public void AddComponent(Project project, Component component)

@@ -70,6 +70,7 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 TKFont.Drawing.RefreshBuffers();
                 TKFont.Drawing.Draw();
+                GL.Finish();
                 TKGame?.Context.SwapBuffers();
             }
 

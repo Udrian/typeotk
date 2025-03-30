@@ -1,4 +1,5 @@
-﻿using TypeOEngine.Typedeaf.Core.Engine;
+﻿using StbImageSharp;
+using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
 using TypeOEngine.Typedeaf.TK.Contents;
 using TypeOEngine.Typedeaf.TK.Engine.Services;
@@ -11,7 +12,9 @@ namespace TypeOEngine.Typedeaf.TK
     public class TKModule : Module<TKModuleOption>
     {
         /// <inheritdoc/>
-        protected override void Initialize() { }
+        protected override void Initialize() {
+            StbImage.stbi_set_flip_vertically_on_load(1);
+        }
 
         /// <inheritdoc/>
         protected override void Cleanup() { }

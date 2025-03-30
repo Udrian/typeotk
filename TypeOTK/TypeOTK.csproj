@@ -9,6 +9,7 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Include="Shaders\tshader.frag">
@@ -26,21 +27,25 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="OpenTK" Version="4.7.7"/>
-		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.0"/>
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.5"/>
+		<PackageReference Include="StbImageSharp" Version="2.27.14"/>
 		<PackageReference Include="System.Drawing.Common" Version="7.0.0"/>
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
-		<ProjectReference Name="TypeOCore" Include="D:/projects/typeo/typeocore/TypeOCore/TypeOCore.csproj"/>
+		<ProjectReference Name="TypeOCore" Include="../../typeocore/TypeOCore/TypeOCore.csproj"/>
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="QuickFont.Desktop">
 			<HintPath>dll\QuickFont.Desktop.dll</HintPath>
 		</Reference>
-		<Reference Include="SharpFont.NetStandard">
-			<HintPath>dll\SharpFont.NetStandard.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 	<ItemGroup>
+		<None Update="dll\QuickFont.Desktop.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="dll\SharpFont.NetStandard.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="freetype6.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
