@@ -12,8 +12,9 @@ namespace TypeDTK.View.Viewer
         public FakeWindow Window { get; set; }
         public ICanvas Canvas { get; set; }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
+            base.Initialize();
             //TODO: Should use WindowService to create the FakeWindow
             MainWindow = Window = new FakeWindow()
             {
@@ -24,7 +25,7 @@ namespace TypeDTK.View.Viewer
             Scenes.SetScene<FakeScene>();
         }
 
-        public override void Cleanup()
+        protected override void Cleanup()
         {
             Scenes.Cleanup();
         }

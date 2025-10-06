@@ -5,7 +5,12 @@ namespace TypeDTK.View.Viewer
 {
     internal class FakeScene : Scene
     {
-        public override void Initialize()
+        protected override void Initialize()
+        {
+            base.Initialize();
+        }
+
+        protected override void Cleanup()
         {
         }
 
