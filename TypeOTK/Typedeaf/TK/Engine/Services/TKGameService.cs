@@ -60,9 +60,14 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
         /// <inheritdoc/>
         public void Update(double dt)
         {
+            if (!Context.Game.RunSynchronously)
+            {
+                return;
+            }
+
             NativeWindow.ProcessWindowEvents(false);
 
-            for(var i = 0; i < TKGames.Count; i++)
+            for (var i = 0; i < TKGames.Count; i++)
             {
                 if (!TKGames[i].Exists || TKGames[i].IsExiting)
                 {

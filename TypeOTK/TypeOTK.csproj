@@ -26,29 +26,15 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="OpenTK" Version="4.7.7"/>
-		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.5"/>
-		<PackageReference Include="StbImageSharp" Version="2.27.14"/>
-		<PackageReference Include="System.Drawing.Common" Version="7.0.0"/>
+		<PackageReference Include="OpenTK" Version="4.8.2" />
+		<PackageReference Include="OpenTK.GLWpfControl" Version="4.3.3" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+		<PackageReference Include="StbImageSharp" Version="2.30.15" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.9" />
+		<PackageReference Include="Wayfinder.QuickFont" Version="1.0.0" />
 	</ItemGroup>
 	<ItemGroup Label="TypeOModules">
 		<ProjectReference Name="TypeOCore" Include="../../typeocore/TypeOCore/TypeOCore.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-		<Reference Include="QuickFont.Desktop">
-			<HintPath>dll\QuickFont.Desktop.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup>
-		<None Update="dll\QuickFont.Desktop.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="dll\SharpFont.NetStandard.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="freetype6.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 	</ItemGroup>
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
 		<Exec Command="cmd /c &quot;$(ProjectDir)../typer/typer.bat dependency -p $(ProjectDir)../&quot;" />

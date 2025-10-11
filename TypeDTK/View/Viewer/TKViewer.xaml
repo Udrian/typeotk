@@ -9,9 +9,7 @@
              d:DesignHeight="450" d:DesignWidth="800"
              Loaded="OnLoaded"
              Unloaded="OnUnloaded">
-    <Grid x:Name="Canvas">
-        <glWpfControl:GLWpfControl 
+    <glWpfControl:GLWpfControl 
             x:Name="OpenTkControl" 
             Render="OnRender"/>
-    </Grid>
 </UserControl>

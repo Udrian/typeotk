@@ -19,6 +19,7 @@ namespace TypeDTK.View.Viewer
         {
             FakeTypeO = (TypeO)TypeO.Create<FakeGame>("Drawable Viewer");
             Game = (FakeGame)FakeTypeO.Context.Game;
+            Game.RunSynchronously = false;
 
             foreach (var module in modules)
             {
@@ -30,6 +31,13 @@ namespace TypeDTK.View.Viewer
         {
             if(!FakeTypeO.Context.Game.Initialized)
                 FakeTypeO.Start();
+        }
+
+        public void Clear()
+        {
+            if (Game == null) return;
+            Game.Scenes.CurrentScene.Entities.Clear();
+            Game.Scenes.CurrentScene.Drawables.Clear();
         }
 
         public void AddComponent(Project project, Component component)
@@ -64,14 +72,10 @@ namespace TypeDTK.View.Viewer
             }
         }
 
-        public void Update(double dt)
+        public void UpdateAndDraw()
         {
-            Game?.Update(dt);
-        }
-
-        public void Draw()
-        {
-            Game?.Draw();
+            if (FakeTypeO.Context.Game.Initialized)
+                FakeTypeO.Context.ProcessGame();
         }
 
         public void Close()
