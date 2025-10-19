@@ -34,11 +34,10 @@ namespace TypeOEngine.Typedeaf.TK
             public Game Game { get; set; }
 
             /// <inheritdoc/>
-            public TKCanvas(IWindow window, Rectangle viewport, TKGameWindow tKGame) : base(window, viewport, new Matrix())
+            public TKCanvas(IWindow window, Rectangle viewport, TKGameWindow tKGame) : base(window, viewport)
             {
                 Window = window;
                 Viewport = viewport;
-                WorldMatrix = new Matrix();
                 TKGame = tKGame;
 
                 Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
@@ -77,6 +76,7 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void PreDraw()
             {
+                ViewMatrix = Matrix4.CreateTranslation(-(float)WorldTranslation.X, -(float)WorldTranslation.Y, -(float)WorldTranslation.Z);
                 TKFont.Drawing.ProjectionMatrix = ProjectionMatrix * Matrix4.CreateScale(1, -1, 1);
             }
 
