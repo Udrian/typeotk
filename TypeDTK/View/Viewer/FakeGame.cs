@@ -27,7 +27,7 @@ namespace TypeDTK.View.Viewer
 
         protected override void Cleanup()
         {
-            Scenes.Cleanup();
+            base.Cleanup();
         }
 
         public override void Draw()

@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using QuickFont;
 using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
@@ -39,18 +40,26 @@ namespace TypeOEngine.Typedeaf.TK
                 Window = window;
                 Viewport = viewport;
                 TKGame = tKGame;
+            }
 
+            protected override void Initialize()
+            {
                 Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
                 TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
 
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
                 //TODO: Take a second look at this, shouldn't have to but left and top on -1
-                ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(-1, (float)viewport.Size.X-1, (float)viewport.Size.Y, -1, -1.0f, 100.0f);
+                ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(-1, (float)Viewport.Size.X - 1, (float)Viewport.Size.Y, -1, -1.0f, 100.0f);
 
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             }
-             
+
+            protected override void Cleanup()
+            {
+                //TODO: Cleanup
+            }
+
             /// <inheritdoc/>
             public override void Clear(Color clearColor)
             {
