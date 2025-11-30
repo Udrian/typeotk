@@ -1,13 +1,20 @@
 {
     "name": "TypeOTK",
     "version": "0.1.0",
-    "externals": ["QuickFont.Desktop.dll", "SharpFont.NetStandard.dll", "freetype6.dll"],
+    "externals": ["Shaders/tshader.frag", "Shaders/tshader.vert", "Shaders/shader.frag", "Shaders/shader.vert"],
     "dependencies": [
-        "TypeOCore-0.1.0",
-        "TypeD-0.1.0;dev",
-        "TypeODesktop-0.1.0;dev"
+        "Udrian@TypeOCore-0.1.0.dev",
+        "Udrian@TypeD-0.1.0.dev;dev",
+        "Udrian@TypeODesktop-0.1.0.dev;test",
+		"OpenTK-4.8.2;nuget",
+		"OpenTK.GLWpfControl-4.3.3;nuget",
+		"SixLabors.ImageSharp-3.1.11;nuget",
+		"StbImageSharp-2.30.15;nuget",
+		"System.Drawing.Common-9.0.9;nuget",
+		"Wayfinder.QuickFont-1.0.0;nuget",
+        "Xunit.StaFact-1.1.11;nuget;test"
     ],
-    "type": "Module",
+    "type": "module",
     "devModuleName": "TypeDTK",
     "testName": "TypeOTKTest"
 }

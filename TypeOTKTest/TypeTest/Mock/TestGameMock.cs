@@ -12,9 +12,9 @@ namespace TypeOTKTest.TypeTest.Mock
         internal Action<Context> CleanUpAction { get; set; }
 
         public static string GameName { get; set; } = "test";
-        public override void Initialize() { InitializeAction?.Invoke((this as IHasContext).Context); }
+        protected override void Initialize() { base.Initialize(); InitializeAction?.Invoke((this as IHasContext).Context); }
+        protected override void Cleanup() { CleanUpAction?.Invoke((this as IHasContext).Context); }
         public override void Update(double dt) { if (UpdateAction == null) Exit(); else UpdateAction.Invoke((this as IHasContext).Context); }
         public override void Draw() { DrawAction?.Invoke((this as IHasContext).Context); }
-        public override void Cleanup() { CleanUpAction?.Invoke((this as IHasContext).Context); }
     }
 }
