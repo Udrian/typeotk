@@ -1,23 +1,22 @@
-﻿using OpenTK.Wpf;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
+using Avalonia;
+using Avalonia.Controls;
 using TypeD.Models.Data;
 using TypeD.View.Viewer;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Desktop;
 using TypeOEngine.Typedeaf.TK;
+using OpenTKAvalonia;
 
 namespace TypeDTK.View.Viewer;
 
 /// <summary>
 /// 
 /// </summary>
-public partial class TKViewer : UserControl, IViewer
+public partial class TKViewer : BaseTkOpenGlControl, IViewer
 {
     private bool IsLoaded { get; set; }
-
     public Project Project { get; private set; }
 
     public Component Component { get; private set; }
@@ -26,13 +25,11 @@ public partial class TKViewer : UserControl, IViewer
 
     public TKViewer()
     {
-        InitializeComponent();
         IsLoaded = false;
     }
 
     public void Init(Project project, Component component)
     {
-
         if (Project != null && Component != null && Viewer != null)
         {
             Viewer.Clear();
@@ -43,8 +40,6 @@ public partial class TKViewer : UserControl, IViewer
 
         if (Viewer == null)
         {
-            var mainSettings = new GLWpfControlSettings();
-            OpenTkControl.Start(mainSettings);
             Viewer = new FakeViewer(Project, new List<Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>>()
                 {
                     new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new DesktopModule(), new DesktopModuleOption() {}),
@@ -62,25 +57,25 @@ public partial class TKViewer : UserControl, IViewer
         }
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    protected override void OpenTkInit()
     {
         Viewer.Start();
-        if(Project != null && Component != null)
+        if (Project != null && Component != null)
         {
             Viewer.AddComponent(Project, Component);
         }
         
-        SetWindowSize(new Size(ActualWidth, ActualHeight));
+        SetWindowSize(new Size(Bounds.Size.Width, Bounds.Size.Height));
         IsLoaded = true;
     }
 
-    private void OnUnloaded(object sender, RoutedEventArgs e)
+    protected override void OpenTkTeardown()
     {
         if (Viewer != null)
             Viewer.Close();
     }
 
-    private void OnRender(TimeSpan delta)
+    protected override void OpenTkRender()
     {
         if (Viewer != null)
             Viewer.UpdateAndDraw();

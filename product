@@ -5,9 +5,8 @@
     "dependencies": [
         "Udrian@TypeOCore-0.1.0.dev",
         "Udrian@TypeD-0.1.0.dev;dev",
-        "Udrian@TypeODesktop-0.1.0.dev;test",
+        "Udrian@TypeODesktop-0.1.0.dev",
 		"OpenTK-4.8.2;nuget",
-		"OpenTK.GLWpfControl-4.3.3;nuget",
 		"SixLabors.ImageSharp-3.1.11;nuget",
 		"StbImageSharp-2.30.15;nuget",
 		"System.Drawing.Common-9.0.9;nuget",
