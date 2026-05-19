@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using TypeD.Models.Data;
+using TypeD.Models.Data.Hooks;
+using TypeD.Models.Interfaces;
+using TypeD.ViewModel;
 using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
@@ -15,8 +18,12 @@ namespace TypeDTK.View.Viewer
         private TypeO FakeTypeO { get; set; }
         private FakeGame Game { get; set; }
 
+        private IHookModel HookModel { get; set; }
+
         public FakeViewer(Project project, List<Tuple<Module, ModuleOption>> modules)
         {
+            HookModel = ViewModelBase.ResourceModel.Get<IHookModel>();
+
             FakeTypeO = (TypeO)TypeO.Create<FakeGame>("Drawable Viewer");
             Game = (FakeGame)FakeTypeO.Context.Game;
             Game.RunSynchronously = false;
@@ -25,6 +32,21 @@ namespace TypeDTK.View.Viewer
             {
                 FakeTypeO.LoadModule(module.Item1, module.Item2);
             }
+
+            HookModel.AddHook<PropertyChangedHook>((hook) =>
+            {
+                TypeOObject obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.ID);
+                var objType = obj.GetType();
+                objType.GetProperty(hook.Property.Name)?.SetValue(obj, hook.Property.Value);
+            });
+            HookModel.AddHook<ComponentAddedHook>((hook) =>
+            {
+                var addedObject = InternalAddComponent(project, hook.Child); //TODO: Should add it properly to the parent
+                if(addedObject != null)
+                {
+                    hook.Child.ID = addedObject.ID;
+                }
+            });
         }
 
         public void Start()
@@ -42,20 +64,43 @@ namespace TypeDTK.View.Viewer
 
         public void AddComponent(Project project, Component component)
         {
+            InternalAddComponent(project, component);
+
+            int i = 0;
+            FakeTypeO.Context.ListAllTypeOObjects().ForEach(e =>
+            {
+                if (e is Drawable || e is Entity)
+                {
+                    if (i == 0)
+                    {
+                        component.ID = e.ID;
+                    }
+                    else
+                    {
+                        component.Children[i - 1].ID = e.ID;
+                    }
+                    i++;
+                }
+            });
+        }
+
+        private TypeOObject InternalAddComponent(Project project, Component component)
+        {
             var typeInfo = project.Assembly.GetType(component.FullName);
-            if (typeInfo == null) return;
+            if (typeInfo == null) return null;
             if (component.TypeOBaseType == typeof(Drawable))
             {
-                Game.Scenes.CurrentScene.Drawables.Create(typeInfo);
+                return Game.Scenes.CurrentScene.Drawables.Create(typeInfo, component.ID);
             }
             else if (component.TypeOBaseType == typeof(Entity))
             {
-                Game.Scenes.CurrentScene.Entities.Create(typeInfo);
+                return Game.Scenes.CurrentScene.Entities.Create(typeInfo, component.ID);
             }
             else if (component.TypeOBaseType == typeof(Scene))
             {
-                Game.Scenes.SetScene(typeInfo);
+                return Game.Scenes.SetScene(typeInfo);
             }
+            return null;
         }
 
         public void SetWindowSize(Vec2i size)

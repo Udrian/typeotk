@@ -59,6 +59,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 
     protected override void OpenTkInit()
     {
+        if (IsLoaded) return;
         Viewer.Start();
         if (Project != null && Component != null)
         {
