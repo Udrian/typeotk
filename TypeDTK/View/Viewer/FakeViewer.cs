@@ -1,14 +1,19 @@
-﻿using System;
+﻿using Avalonia.Platform;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
 using TypeD.ViewModel;
+using TypeDCore.Models.Data.Hooks;
 using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Entities;
 using TypeOEngine.Typedeaf.Core.Entities.Drawables;
+using TypeOEngine.Typedeaf.Desktop.Engine.Hardwares.Interfaces;
 using Module = TypeOEngine.Typedeaf.Core.Engine.Module;
 
 namespace TypeDTK.View.Viewer
@@ -45,6 +50,7 @@ namespace TypeDTK.View.Viewer
                 if(addedObject != null)
                 {
                     hook.Child.ID = addedObject.ID;
+                    HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = addedObject, Component = hook.Child });
                 }
             });
         }
@@ -67,17 +73,20 @@ namespace TypeDTK.View.Viewer
             InternalAddComponent(project, component);
 
             int i = 0;
+            var components = component.Children.Flatten(c => c.Children).ToList();
             FakeTypeO.Context.ListAllTypeOObjects().ForEach(e =>
             {
-                if (e is Drawable || e is Entity)
+                if (e is Drawable || e is Entity || (e is Scene && !(e is FakeScene)))
                 {
                     if (i == 0)
                     {
                         component.ID = e.ID;
+                        HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = e, Component = component });
                     }
                     else
                     {
-                        component.Children[i - 1].ID = e.ID;
+                        components[i - 1].ID = e.ID;
+                        HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = e, Component = components[i - 1] });
                     }
                     i++;
                 }
@@ -114,6 +123,15 @@ namespace TypeDTK.View.Viewer
             {
                 Game.Window.Size = new Vec2i(size);
                 Game.Canvas.Viewport = new Rectangle(Game.Canvas.Viewport.Pos, size);
+            }
+        }
+
+        public void SetMousePos(Vec2i pos)
+        {
+            IMouseHardware mouseHardware = FakeTypeO.Context.Hardwares[typeof(IMouseHardware)] as IMouseHardware;
+            if(mouseHardware != null)
+            {
+                mouseHardware.CurrentMousePosition = pos;
             }
         }
 

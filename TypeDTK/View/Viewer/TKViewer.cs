@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using OpenTKAvalonia;
+using System;
+using System.Collections.Generic;
 using TypeD.Models.Data;
 using TypeD.View.Viewer;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Desktop;
 using TypeOEngine.Typedeaf.TK;
-using OpenTKAvalonia;
 
 namespace TypeDTK.View.Viewer;
 
@@ -86,5 +87,13 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         if(Viewer != null)
             Viewer.SetWindowSize(new Vec2i((int)size.Width, (int)size.Height));
+    }
+
+    protected override void OnPointerMoved(PointerEventArgs e)
+    {
+        base.OnPointerMoved(e);
+
+        var point = e.GetCurrentPoint(this);
+        Viewer.SetMousePos(new Vec2i((int)point.Position.X, (int)point.Position.Y));
     }
 }
