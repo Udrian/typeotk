@@ -53,6 +53,14 @@ namespace TypeDTK.View.Viewer
                     HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = addedObject, Component = hook.Child });
                 }
             });
+            HookModel.AddHook<ComponentRemovedHook>((hook) =>
+            {
+                TypeOObject obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Child.ID);
+
+                HookModel.Shoot(new TypeOObjectRemovedFromViewHook() { Context = FakeTypeO.Context, TypeOObject = obj, Component = hook.Child });
+                InternalRemoveComponent(project, obj);
+                hook.Child.ID = null;
+            });
         }
 
         public void Start()
@@ -110,6 +118,22 @@ namespace TypeDTK.View.Viewer
                 return Game.Scenes.SetScene(typeInfo);
             }
             return null;
+        }
+
+        private void InternalRemoveComponent(Project project, TypeOObject obj)
+        {
+            if (obj is Entity entity)
+            {
+                entity.Remove();
+            }
+            else if (obj is Drawable drawable)
+            {
+                Game.Scenes.CurrentScene.Drawables.Destroy(drawable);
+            }
+            else if (obj is Scene scene)
+            {
+                Game.Scenes.SetScene(null);
+            }
         }
 
         public void SetWindowSize(Vec2i size)
