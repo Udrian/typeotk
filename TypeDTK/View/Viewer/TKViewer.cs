@@ -18,7 +18,9 @@ namespace TypeDTK.View.Viewer;
 public partial class TKViewer : BaseTkOpenGlControl, IViewer
 {
     private bool IsLoaded { get; set; }
-    public Project Project { get; private set; }
+    public Project Project { get; set; }
+
+    private Component ComponentToAdd { get; set; }
 
     public Component Component { get; private set; }
 
@@ -29,32 +31,33 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         IsLoaded = false;
     }
 
-    public void Init(Project project, Component component)
+    public void Init()
+    {
+        Viewer = new FakeViewer(Project, new List<Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>>()
+            {
+                new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new DesktopModule(), new DesktopModuleOption() {}),
+                new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new TKModule(), new TKModuleOption() {})
+            });
+        this.SizeChanged += (object sender, SizeChangedEventArgs e) => { SetWindowSize(e.NewSize); };
+    }
+
+    public void Load(Component component)
     {
         if (Project != null && Component != null && Viewer != null)
         {
             Viewer.Clear();
+            Component = null;
         }
 
-        Project = project;
-        Component = component;
+        ComponentToAdd = component;
+    }
 
-        if (Viewer == null)
+    public void Unload()
+    {
+        if(IsLoaded && Component != null)
         {
-            Viewer = new FakeViewer(Project, new List<Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>>()
-                {
-                    new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new DesktopModule(), new DesktopModuleOption() {}),
-                    new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new TKModule(), new TKModuleOption() {})
-                });
-            this.SizeChanged += (object sender, SizeChangedEventArgs e) => { SetWindowSize(e.NewSize); };
-        }
-
-        if(IsLoaded)
-        {
-            if (Project != null && Component != null)
-            {
-                Viewer.AddComponent(Project, Component);
-            }
+            Viewer.Clear();
+            Component = null;
         }
     }
 
@@ -62,10 +65,6 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         if (IsLoaded) return;
         Viewer.Start();
-        if (Project != null && Component != null)
-        {
-            Viewer.AddComponent(Project, Component);
-        }
         
         SetWindowSize(new Size(Bounds.Size.Width, Bounds.Size.Height));
         IsLoaded = true;
@@ -75,10 +74,20 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         if (Viewer != null)
             Viewer.Close();
+
+        IsLoaded = false;
     }
 
     protected override void OpenTkRender()
     {
+
+        if (IsLoaded && ComponentToAdd != null)
+        {
+            Viewer.AddComponent(Project, ComponentToAdd);
+            Component = ComponentToAdd;
+            ComponentToAdd = null;
+        }
+
         if (Viewer != null)
             Viewer.UpdateAndDraw();
     }
