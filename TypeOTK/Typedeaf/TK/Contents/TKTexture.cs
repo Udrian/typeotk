@@ -4,6 +4,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
+using TypeOTK.Typedeaf.TK.Engine.Graphics;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
@@ -22,6 +23,7 @@ namespace TypeOEngine.Typedeaf.TK
             protected override void Load(string path)
             {
                 Handle = GL.GenTexture();
+                TKGLHelper.CheckGLError();
                 Use();
 
                 Load(Image.Load<Rgba32>(path));
@@ -34,6 +36,8 @@ namespace TypeOEngine.Typedeaf.TK
                 Use();
 
                 Load(Image.LoadPixelData<Rgba32>(data, size.X, size.Y));
+
+                TKGLHelper.CheckGLError($"Error creating Texture '{FilePath}'");
             }
 
             private void Load(Image<Rgba32> image)
@@ -61,6 +65,8 @@ namespace TypeOEngine.Typedeaf.TK
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
                 GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+                TKGLHelper.CheckGLError($"Error loading Texture '{FilePath}'");
             }
 
             /// <inheritdoc/>
@@ -77,6 +83,8 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 GL.ActiveTexture(unit);
                 GL.BindTexture(TextureTarget.Texture2D, Handle);
+
+                TKGLHelper.CheckGLError($"Error binding Texture '{FilePath}'");
             }
 
             /// <inheritdoc/>

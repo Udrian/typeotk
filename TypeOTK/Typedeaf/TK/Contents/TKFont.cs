@@ -6,6 +6,7 @@ using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
 using TypeOEngine.Typedeaf.Core.Engine.Interfaces;
+using TypeOTK.Typedeaf.TK.Engine.Graphics;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
@@ -39,11 +40,8 @@ namespace TypeOEngine.Typedeaf.TK
             protected override void Load(string path)
             {
                 QFont = new QFont(path, FontSize, new QFontBuilderConfiguration());
-                var error = GL.GetError();
-                if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
-                {
-                    Logger.Log(LogLevel.Error, $"Error loading Font '{FilePath}' with the error: '{error.ToString()}'");
-                }
+
+                TKGLHelper.CheckGLError($"Error loading Font '{FilePath}'");
             }
 
             /// <inheritdoc/>

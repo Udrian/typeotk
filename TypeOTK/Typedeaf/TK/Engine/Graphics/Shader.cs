@@ -2,6 +2,7 @@
 using OpenTK.Mathematics;
 using System.Text;
 using TypeOEngine.Typedeaf.Core.Common;
+using TypeOTK.Typedeaf.TK.Engine.Graphics;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 
 namespace TypeOEngine.Typedeaf.TK
@@ -32,7 +33,6 @@ namespace TypeOEngine.Typedeaf.TK
                 if (success == 0)
                 {
                     throw new Exception("Error: ");
-                    return;
                 }
                 GL.DetachShader(Handle, vertexshader);
                 GL.DetachShader(Handle, fragmentshader);
@@ -47,6 +47,8 @@ namespace TypeOEngine.Typedeaf.TK
                     var location = GL.GetUniformLocation(Handle, key);
                     UniformLocations.Add(key, location);
                 }
+
+                TKGLHelper.CheckGLError();
             }
 
             private int LoadVertexShader(string vertexShaderSourcePath)
@@ -86,8 +88,9 @@ namespace TypeOEngine.Typedeaf.TK
                 {
                     string infoLog = GL.GetShaderInfoLog(shader);
                     throw new Exception("Error: " + infoLog);
-                    return -1;
                 }
+
+                TKGLHelper.CheckGLError();
 
                 return shader;
             }
@@ -96,56 +99,54 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 Use();
                 GL.Uniform1(UniformLocations[name], value);
-                CheckError();
+                TKGLHelper.CheckGLError();
             }
 
             public void Set(string name, float value)
             {
                 Use();
                 GL.Uniform1(UniformLocations[name], value);
-                CheckError();
+                TKGLHelper.CheckGLError();
             }
 
             public void Set(string name, Color value)
             {
                 Use();
                 GL.Uniform4(UniformLocations[name], new Color4(value.Rf, value.Gf, value.Bf, value.Af));
-                CheckError();
+                TKGLHelper.CheckGLError();
             }
 
             public void Set(string name, double x, double y, double z, double w)
             {
                 Use();
                 GL.Uniform4(UniformLocations[name], x, y, z, w);
-                CheckError();
+                TKGLHelper.CheckGLError();
             }
 
             public void Set(string name, Vec3 value)
             {
                 Use();
                 GL.Uniform3(UniformLocations[name], value.X, value.Y, value.Z);
-                CheckError();
+                TKGLHelper.CheckGLError();
             }
 
             public void Set(string name, Matrix4 matrix)
             {
                 Use();
                 GL.UniformMatrix4(UniformLocations[name], true, ref matrix);
-                CheckError();
+                TKGLHelper.CheckGLError();
             }
 
-            public void CheckError()
+            public void Cleanup()
             {
-                var error = GL.GetError();
-                if (error != ErrorCode.NoError)
-                {
-                    throw new Exception("Error: " + error.ToString());
-                }
+                GL.DeleteProgram(Handle);
+                TKGLHelper.CheckGLError();
             }
 
             public void Use()
             {
                 GL.UseProgram(Handle);
+                TKGLHelper.CheckGLError();
             }
         }
     }

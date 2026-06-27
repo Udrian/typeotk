@@ -27,6 +27,7 @@ namespace TypeDTK.View.Viewer
 
         protected override void Cleanup()
         {
+            base.Cleanup();
         }
     }
 }

@@ -1,6 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using QuickFont;
 using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
@@ -9,6 +8,7 @@ using TypeOEngine.Typedeaf.Core.Engine.Graphics;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics.Interfaces;
 using TypeOEngine.Typedeaf.Core.Interfaces;
 using TypeOEngine.Typedeaf.TK.Contents;
+using TypeOTK.Typedeaf.TK.Engine.Graphics;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
 using Rectangle = TypeOEngine.Typedeaf.Core.Common.Rectangle;
 
@@ -53,11 +53,16 @@ namespace TypeOEngine.Typedeaf.TK
 
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+                TKGLHelper.CheckGLError();
             }
 
             protected override void Cleanup()
             {
-                //TODO: Cleanup
+                Shader.Cleanup();
+                TextureShader.Cleanup();
+
+                TKGLHelper.CheckGLError();
             }
 
             /// <inheritdoc/>
@@ -66,11 +71,8 @@ namespace TypeOEngine.Typedeaf.TK
                 GL.ClearColor(clearColor.Rf, clearColor.Gf, clearColor.Bf, clearColor.Af);
                 GL.Clear(ClearBufferMask.ColorBufferBit);
                 TKFont.Drawing.DrawingPrimitives.Clear();
-                var error = GL.GetError();
-                if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
-                {
-                    throw new Exception("Error: " + error.ToString());
-                }
+
+                TKGLHelper.CheckGLError("", ErrorCode.InvalidEnum);
             }
 
             /// <inheritdoc/>
@@ -80,13 +82,15 @@ namespace TypeOEngine.Typedeaf.TK
                 TKFont.Drawing.Draw();
                 GL.Finish();
                 TKGame?.Context.SwapBuffers();
+
+                TKGLHelper.CheckGLError();
             }
 
             /// <inheritdoc/>
             public override void PreDraw()
             {
                 ViewMatrix = Matrix4.CreateTranslation(-(float)WorldTranslation.X, -(float)WorldTranslation.Y, -(float)WorldTranslation.Z);
-                TKFont.Drawing.ProjectionMatrix = ProjectionMatrix * Matrix4.CreateScale(1, -1, 1);
+                //TKFont.Drawing.ProjectionMatrix = ProjectionMatrix * Matrix4.CreateScale(1, -1, 1);
             }
 
             /// <inheritdoc/>
@@ -100,6 +104,8 @@ namespace TypeOEngine.Typedeaf.TK
                 byte[] data = new byte[(int)screenRect.Size.X * (int)screenRect.Size.Y * 4];
                 GL.ReadBuffer(ReadBufferMode.Front);
                 GL.ReadPixels((int)screenRect.Pos.X, (int)screenRect.Pos.Y, (int)screenRect.Size.X, (int)screenRect.Size.Y, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+
+                TKGLHelper.CheckGLError();
 
                 var texture = Game.ContentLoader.CreateTexture<TKTexture>(new Vec2i((int)screenRect.Size.X, (int)screenRect.Size.Y), new ReadOnlySpan<byte>(data));
                 texture.FlipVertical();
