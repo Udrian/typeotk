@@ -40,7 +40,7 @@ namespace TypeDTK.View.Viewer
 
             HookModel.AddHook<PropertyChangedHook>((hook) =>
             {
-                TypeOObject obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.ID);
+                TypeOObject obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Component.FullParentPath + hook.Component.ID);
                 var objType = obj.GetType();
                 objType.GetProperty(hook.Property.Name)?.SetValue(obj, hook.Property.Value);
             });
