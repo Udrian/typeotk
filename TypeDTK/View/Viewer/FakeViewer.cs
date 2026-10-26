@@ -22,11 +22,13 @@ namespace TypeDTK.View.Viewer
     {
         private TypeO FakeTypeO { get; set; }
         private FakeGame Game { get; set; }
+        private Project Project { get; set; }
 
         private IHookModel HookModel { get; set; }
 
         public FakeViewer(Project project, List<Tuple<Module, ModuleOption>> modules)
         {
+            this.Project = project;
             HookModel = ViewModelBase.ResourceModel.Get<IHookModel>();
 
             FakeTypeO = (TypeO)TypeO.Create<FakeGame>("Drawable Viewer");
@@ -73,7 +75,9 @@ namespace TypeDTK.View.Viewer
         {
             if (Game == null) return;
             Game.Scenes.CurrentScene.Entities.Clear();
+            Game.Scenes.CurrentScene.Entities.Update(0);
             Game.Scenes.CurrentScene.Drawables.Clear();
+            HookModel.Shoot(new ViewerUnloadedHook { Project = Project });
         }
 
         public void AddComponent(Project project, Component component)

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using OpenTKAvalonia;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TypeD.Models.Data;
 using TypeD.View.Viewer;
@@ -17,10 +18,9 @@ namespace TypeDTK.View.Viewer;
 /// </summary>
 public partial class TKViewer : BaseTkOpenGlControl, IViewer
 {
+    private readonly ConcurrentQueue<Action> PendingOperations = new();
     private bool IsLoaded { get; set; }
     public Project Project { get; set; }
-
-    private Component ComponentToAdd { get; set; }
 
     public Component Component { get; private set; }
 
@@ -43,22 +43,25 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 
     public void Load(Component component)
     {
-        if (Project != null && Component != null && Viewer != null)
+        PendingOperations.Enqueue(() =>
         {
+            if (Viewer == null)
+                return;
+
             Viewer.Clear();
             Component = null;
-        }
-
-        ComponentToAdd = component;
+            Viewer.AddComponent(Project, component);
+            Component = component;
+        });
     }
 
     public void Unload()
     {
-        if(IsLoaded && Component != null)
+        PendingOperations.Enqueue(() =>
         {
-            Viewer.Clear();
+            Viewer?.Clear();
             Component = null;
-        }
+        });
     }
 
     protected override void OpenTkInit()
@@ -80,12 +83,9 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 
     protected override void OpenTkRender()
     {
-
-        if (IsLoaded && ComponentToAdd != null)
+        while (PendingOperations.TryDequeue(out var operation))
         {
-            Viewer.AddComponent(Project, ComponentToAdd);
-            Component = ComponentToAdd;
-            ComponentToAdd = null;
+            operation();
         }
 
         if (Viewer != null)
