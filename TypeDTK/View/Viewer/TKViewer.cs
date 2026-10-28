@@ -1,6 +1,5 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
 using OpenTKAvalonia;
 using System;
 using System.Collections.Concurrent;
@@ -89,7 +88,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         }
 
         if (Viewer != null)
-            Viewer.UpdateAndDraw();
+            Viewer.UpdateAndDraw(MouseState);
     }
 
     private void SetWindowSize(Size size)
@@ -98,11 +97,4 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
             Viewer.SetWindowSize(new Vec2i((int)size.Width, (int)size.Height));
     }
 
-    protected override void OnPointerMoved(PointerEventArgs e)
-    {
-        base.OnPointerMoved(e);
-
-        var point = e.GetCurrentPoint(this);
-        Viewer.SetMousePos(new Vec2i((int)point.Position.X, (int)point.Position.Y));
-    }
 }

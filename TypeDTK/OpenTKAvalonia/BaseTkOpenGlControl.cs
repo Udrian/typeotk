@@ -5,6 +5,10 @@ using Avalonia.OpenGL.Controls;
 using Avalonia.Rendering;
 using Avalonia.Threading;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using System.Collections.Generic;
+using TypeOEngine.Typedeaf.Desktop.Engine.Hardwares.Interfaces;
+using GlfwMouseButton = OpenTK.Windowing.GraphicsLibraryFramework.MouseButton;
 
 namespace OpenTKAvalonia;
 
@@ -16,7 +20,18 @@ public abstract class BaseTkOpenGlControl : OpenGlControlBase, ICustomHitTest
     /// </summary>
     public AvaloniaKeyboardState KeyboardState = new();
 
+    /// <summary>
+    /// Mouse input for the current frame, with the previous frame's position, wheel, and button states.
+    /// </summary>
+    public MouseStateSnapshot MouseState { get; private set; } = MouseStateSnapshot.Empty;
+
     private AvaloniaTkContext? _avaloniaTkContext;
+    private Vector2 _mousePosition;
+    private Vector2 _previousMousePosition;
+    private Vector2 _mouseScroll;
+    private Vector2 _previousMouseScroll;
+    private readonly HashSet<GlfwMouseButton> _mouseButtonsDown = new();
+    private readonly HashSet<GlfwMouseButton> _previousMouseButtonsDown = new();
 
     /// <summary>
     /// OpenTkRender is called once a frame to draw to the control.
@@ -52,6 +67,13 @@ public abstract class BaseTkOpenGlControl : OpenGlControlBase, ICustomHitTest
     {
         //Update last key states
         KeyboardState.OnFrame();
+        MouseState = new MouseStateSnapshot(
+            _mousePosition,
+            _previousMousePosition,
+            _mouseScroll,
+            _previousMouseScroll,
+            _mouseButtonsDown,
+            _previousMouseButtonsDown);
         
         //Set up the aspect ratio so shapes aren't stretched.
         GL.Viewport(0, 0, (int) Bounds.Width, (int) Bounds.Height);
@@ -61,6 +83,11 @@ public abstract class BaseTkOpenGlControl : OpenGlControlBase, ICustomHitTest
         {
             OpenTkRender();
         }
+
+        _previousMousePosition = _mousePosition;
+        _previousMouseScroll = _mouseScroll;
+        _previousMouseButtonsDown.Clear();
+        _previousMouseButtonsDown.UnionWith(_mouseButtonsDown);
 
         //Schedule next UI update with avalonia
         Dispatcher.UIThread.Post(RequestNextFrameRendering, DispatcherPriority.Background);
@@ -97,6 +124,54 @@ public abstract class BaseTkOpenGlControl : OpenGlControlBase, ICustomHitTest
             return;
         
         KeyboardState.SetKey(e.Key, false);
+    }
+
+    protected override void OnPointerMoved(PointerEventArgs e)
+    {
+        base.OnPointerMoved(e);
+        UpdateMouseState(e);
+    }
+
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        UpdateMouseState(e);
+    }
+
+    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    {
+        base.OnPointerReleased(e);
+        UpdateMouseState(e);
+    }
+
+    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
+    {
+        base.OnPointerWheelChanged(e);
+        UpdateMouseState(e);
+        _mouseScroll += new Vector2((float)e.Delta.X, (float)e.Delta.Y);
+    }
+
+    private void UpdateMouseState(PointerEventArgs e)
+    {
+        if (!IsEffectivelyVisible)
+            return;
+
+        var properties = e.GetCurrentPoint(this).Properties;
+        var position = e.GetPosition(this);
+        _mousePosition = new Vector2((float)position.X, (float)position.Y);
+        SetButtonState(GlfwMouseButton.Button1, properties.IsLeftButtonPressed);
+        SetButtonState(GlfwMouseButton.Button2, properties.IsRightButtonPressed);
+        SetButtonState(GlfwMouseButton.Button3, properties.IsMiddleButtonPressed);
+        SetButtonState(GlfwMouseButton.Button4, properties.IsXButton1Pressed);
+        SetButtonState(GlfwMouseButton.Button5, properties.IsXButton2Pressed);
+    }
+
+    private void SetButtonState(GlfwMouseButton button, bool isDown)
+    {
+        if (isDown)
+            _mouseButtonsDown.Add(button);
+        else
+            _mouseButtonsDown.Remove(button);
     }
 
     public bool HitTest(Point point) => Bounds.Contains(point);

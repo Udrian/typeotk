@@ -154,17 +154,11 @@ namespace TypeDTK.View.Viewer
             }
         }
 
-        public void SetMousePos(Vec2i pos)
+        public void UpdateAndDraw(MouseStateSnapshot mouseState)
         {
             IMouseHardware mouseHardware = FakeTypeO.Context.Hardwares[typeof(IMouseHardware)] as IMouseHardware;
-            if(mouseHardware != null)
-            {
-                mouseHardware.CurrentMousePosition = pos;
-            }
-        }
+            mouseHardware?.SetState(mouseState);
 
-        public void UpdateAndDraw()
-        {
             if (FakeTypeO.Context.Game.Initialized)
                 FakeTypeO.Context.ProcessGame();
         }
