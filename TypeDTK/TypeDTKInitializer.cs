@@ -31,7 +31,11 @@ public class TypeDTKInitializer : TypeDModuleInitializer
         PanelModel = Resources.Get<IPanelModel>();
 
         // Content
-        ContentProvider.AddSupportedContentType<Texture2dContent, Texture, TKTexture>("png", "texture.png");
+        ContentProvider.AddSupportedContentType<Texture2dContent, Texture, TKTexture>(
+            "png",
+            "texture.png",
+            "TypeOEngine.Typedeaf.TypeOBasic2d.Entities.Drawables.DrawableTexture",
+            "Texture");
 
         // Icons
         var assemblyFolder = Path.GetDirectoryName(typeof(TypeDTKInitializer).Assembly.Location);
