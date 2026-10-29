@@ -59,18 +59,19 @@ namespace TypeDTK.View.Viewer
             });
             HookModel.AddHook<ComponentAddedHook>((hook) =>
             {
-                var addedObject = InternalAddComponent(project, hook.Child, hook.Parent);
-                if(addedObject != null)
-                {
-                    hook.Child.ID = addedObject.ID;
-                    HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = addedObject, Component = hook.Child });
-                    foreach (var nested in hook.Child.Children.Flatten(c => c.Children))
-                    {
-                        var nestedObj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(nested.FullParentPath + nested.ID);
-                        if (nestedObj != null)
-                            HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = nestedObj, Component = nested });
-                    }
-                }
+                AddComponentToView(project, hook.Child, hook.Parent);
+            });
+            HookModel.AddHook<ComponentMovedHook>((hook) =>
+            {
+                // Objects are appended on creation, so re-create the moved node and every later sibling to keep the order.
+                var siblings = hook.Parent.Children.ToList();
+                var start = siblings.IndexOf(hook.Child);
+                if (start < 0) return;
+                var affected = siblings.Skip(start).Where(c => !c.Removed).ToList();
+                foreach (var sibling in affected)
+                    RemoveComponentObjects(project, sibling);
+                foreach (var sibling in affected)
+                    AddComponentToView(project, sibling, hook.Parent);
             });
             HookModel.AddHook<ComponentRemovedHook>((hook) =>
             {
@@ -202,6 +203,24 @@ namespace TypeDTK.View.Viewer
                 return Game.Scenes.SetScene(typeInfo);
             }
             return null;
+        }
+
+        private void AddComponentToView(Project project, Component child, Component parent)
+        {
+            var addedObject = InternalAddComponent(project, child, parent);
+            if (addedObject == null)
+                return;
+
+            child.ID = addedObject.ID;
+            HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = addedObject, Component = child });
+            foreach (var nested in child.Children.Flatten(c => c.Children))
+            {
+                var nestedObj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(nested.FullParentPath + nested.ID);
+                if (nestedObj != null)
+                    HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = nestedObj, Component = nested });
+            }
+            foreach (var property in child.Properties.Where(p => p.Name != "ID" && child.HasPropertyOverridesFor(p.Name)).ToList())
+                HookModel.Shoot(new PropertyChangedHook() { Component = child, Property = property });
         }
 
         private void RemoveComponentObjects(Project project, Component component)
