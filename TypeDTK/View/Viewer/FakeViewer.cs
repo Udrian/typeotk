@@ -1,4 +1,4 @@
-﻿using Avalonia.Platform;
+using Avalonia.Platform;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -90,9 +90,9 @@ namespace TypeDTK.View.Viewer
                     var typeInfo = ResolveType(project, hook.Child.FullName);
                     if (typeInfo == null) return;
                     TypeOObject restored = null;
-                    if (hook.Child.TypeOBaseType == typeof(Drawable))
+                    if (hook.Child.IsBasedOn(typeof(Drawable)))
                         restored = parentEntity.Drawables.Create(typeInfo, hook.Child.ID);
-                    else if (hook.Child.TypeOBaseType == typeof(Entity))
+                    else if (hook.Child.IsBasedOn(typeof(Entity)))
                         restored = parentEntity.Entities.Create(typeInfo, hook.Child.ID);
                     if (restored != null)
                     {
@@ -185,20 +185,20 @@ namespace TypeDTK.View.Viewer
             if (typeInfo == null) return null;
             if (parent != null && FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(parent.FullParentPath + parent.ID) is Entity parentEntity)
             {
-                if (component.TypeOBaseType == typeof(Drawable))
+                if (component.IsBasedOn(typeof(Drawable)))
                     return parentEntity.Drawables.Create(typeInfo, component.ID);
-                if (component.TypeOBaseType == typeof(Entity))
+                if (component.IsBasedOn(typeof(Entity)))
                     return parentEntity.Entities.Create(typeInfo, component.ID);
             }
-            if (component.TypeOBaseType == typeof(Drawable))
+            if (component.IsBasedOn(typeof(Drawable)))
             {
                 return Game.Scenes.CurrentScene.Drawables.Create(typeInfo, component.ID);
             }
-            else if (component.TypeOBaseType == typeof(Entity))
+            else if (component.IsBasedOn(typeof(Entity)))
             {
                 return Game.Scenes.CurrentScene.Entities.Create(typeInfo, component.ID);
             }
-            else if (component.TypeOBaseType == typeof(Scene))
+            else if (component.IsBasedOn(typeof(Scene)))
             {
                 return Game.Scenes.SetScene(typeInfo);
             }
