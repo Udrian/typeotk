@@ -1,3 +1,4 @@
+using System.IO;
 using TypeD;
 using TypeD.Models.Data;
 using TypeD.Models.Interfaces;
@@ -30,7 +31,12 @@ public class TypeDTKInitializer : TypeDModuleInitializer
         PanelModel = Resources.Get<IPanelModel>();
 
         // Content
-        ContentProvider.AddSupportedContentType<Texture2dContent, Texture, TKTexture>("png");
+        ContentProvider.AddSupportedContentType<Texture2dContent, Texture, TKTexture>("png", "texture.png");
+
+        // Icons
+        var assemblyFolder = Path.GetDirectoryName(typeof(TypeDTKInitializer).Assembly.Location);
+        if (!string.IsNullOrEmpty(assemblyFolder))
+            Resources.Get<IIconModel>().AddDefaultIconsPath(Path.Combine(assemblyFolder, "Assets", "Icons"));
 
         // Viewers
         PanelModel.AddViewer<TKViewer>();
