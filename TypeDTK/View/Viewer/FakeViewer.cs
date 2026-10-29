@@ -59,20 +59,51 @@ namespace TypeDTK.View.Viewer
             });
             HookModel.AddHook<ComponentAddedHook>((hook) =>
             {
-                var addedObject = InternalAddComponent(project, hook.Child); //TODO: Should add it properly to the parent
+                var addedObject = InternalAddComponent(project, hook.Child, hook.Parent);
                 if(addedObject != null)
                 {
                     hook.Child.ID = addedObject.ID;
                     HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = addedObject, Component = hook.Child });
+                    foreach (var nested in hook.Child.Children.Flatten(c => c.Children))
+                    {
+                        var nestedObj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(nested.FullParentPath + nested.ID);
+                        if (nestedObj != null)
+                            HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = nestedObj, Component = nested });
+                    }
                 }
             });
             HookModel.AddHook<ComponentRemovedHook>((hook) =>
             {
-                TypeOObject obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Child.ID);
-
-                HookModel.Shoot(new TypeOObjectRemovedFromViewHook() { Context = FakeTypeO.Context, TypeOObject = obj, Component = hook.Child });
-                InternalRemoveComponent(project, obj);
+                RemoveComponentObjects(project, hook.Child);
                 hook.Child.ID = null;
+            });
+            HookModel.AddHook<ComponentRemovedStateChangedHook>((hook) =>
+            {
+                var parentObj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Parent.FullParentPath + hook.Parent.ID);
+                if (hook.Child.Removed)
+                {
+                    RemoveComponentObjects(project, hook.Child);
+                }
+                else if (parentObj is Entity parentEntity)
+                {
+                    var typeInfo = ResolveType(project, hook.Child.FullName);
+                    if (typeInfo == null) return;
+                    TypeOObject restored = null;
+                    if (hook.Child.TypeOBaseType == typeof(Drawable))
+                        restored = parentEntity.Drawables.Create(typeInfo, hook.Child.ID);
+                    else if (hook.Child.TypeOBaseType == typeof(Entity))
+                        restored = parentEntity.Entities.Create(typeInfo, hook.Child.ID);
+                    if (restored != null)
+                    {
+                        HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = restored, Component = hook.Child });
+                        foreach (var nested in hook.Child.Children.Flatten(c => c.Children))
+                        {
+                            var nestedObj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(nested.FullParentPath + nested.ID);
+                            if (nestedObj != null)
+                                HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = FakeTypeO.Context, TypeOObject = nestedObj, Component = nested });
+                        }
+                    }
+                }
             });
         }
 
@@ -122,11 +153,42 @@ namespace TypeDTK.View.Viewer
                 Game.ContentLoader.BasePath = Project.ProjectContentPath;
         }
 
-        private TypeOObject InternalAddComponent(Project project, Component component)
+        private Type ResolveType(Project project, string fullName)
+        {
+            var type = project.Assembly?.GetType(fullName);
+            if (type != null)
+                return type;
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly.IsDynamic)
+                    continue;
+                try
+                {
+                    type = assembly.GetType(fullName);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                if (type != null)
+                    return type;
+            }
+            return null;
+        }
+
+        private TypeOObject InternalAddComponent(Project project, Component component, Component parent = null)
         {
             SyncContentBasePath();
-            var typeInfo = project.Assembly.GetType(component.FullName);
+            var typeInfo = ResolveType(project, component.FullName);
             if (typeInfo == null) return null;
+            if (parent != null && FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(parent.FullParentPath + parent.ID) is Entity parentEntity)
+            {
+                if (component.TypeOBaseType == typeof(Drawable))
+                    return parentEntity.Drawables.Create(typeInfo, component.ID);
+                if (component.TypeOBaseType == typeof(Entity))
+                    return parentEntity.Entities.Create(typeInfo, component.ID);
+            }
             if (component.TypeOBaseType == typeof(Drawable))
             {
                 return Game.Scenes.CurrentScene.Drawables.Create(typeInfo, component.ID);
@@ -142,6 +204,19 @@ namespace TypeDTK.View.Viewer
             return null;
         }
 
+        private void RemoveComponentObjects(Project project, Component component)
+        {
+            foreach (var child in component.Children.ToList())
+                RemoveComponentObjects(project, child);
+
+            var obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(component.FullParentPath + component.ID);
+            if (obj == null)
+                return;
+
+            HookModel.Shoot(new TypeOObjectRemovedFromViewHook() { Context = FakeTypeO.Context, TypeOObject = obj, Component = component });
+            InternalRemoveComponent(project, obj);
+        }
+
         private void InternalRemoveComponent(Project project, TypeOObject obj)
         {
             if (obj is Entity entity)
@@ -150,7 +225,10 @@ namespace TypeDTK.View.Viewer
             }
             else if (obj is Drawable drawable)
             {
-                Game.Scenes.CurrentScene.Drawables.Destroy(drawable);
+                if (drawable.Parent != null)
+                    drawable.Parent.Drawables.Destroy(drawable);
+                else
+                    Game.Scenes.CurrentScene.Drawables.Destroy(drawable);
             }
             else if (obj is Scene scene)
             {
