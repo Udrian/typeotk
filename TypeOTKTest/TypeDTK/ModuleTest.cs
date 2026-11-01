@@ -2,12 +2,11 @@ using Avalonia.Controls;
 using TypeD.Models.Interfaces;
 using TypeDTK.View.Viewer;
 using TypeOTKTest.TypeTest;
-
 namespace TypeDTKTest;
 
 public partial class ModuleTest
 {
-    [Fact]
+    [StaFact]
     public void StartInitializerTest()
     {
         Assert.NotNull(TypeDTKTestExtension.Initializer);
@@ -29,7 +28,7 @@ public partial class ModuleTest
         window.Content = grid;
 
         //TODO: Should create a proper component that we could test
-        tkViewer.Init(null, null);
+        tkViewer.Init();
 
         window.Show();
     }

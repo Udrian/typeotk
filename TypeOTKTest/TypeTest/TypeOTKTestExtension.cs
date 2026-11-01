@@ -22,7 +22,7 @@ namespace TypeOTKTest.TypeTest
             typeO.Context.Game.MainWindow = new TestWindowMock()
             {
                 Title = typeO.Context.Name,
-                Size = new Vec2i(tkGameWindow.Size.X, tkGameWindow.Size.Y),
+                Size = new Vec2i(tkGameWindow.FramebufferSize.X, tkGameWindow.FramebufferSize.Y),
                 GameWindow = tkGameWindow
             };
             return tkGameWindow;
