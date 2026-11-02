@@ -18,6 +18,7 @@ namespace TypeOTKTest.TypeTest
             GLFWProvider.CheckForMainThread = false;
             var tkGameWindow = tkGameService.CreateTKGameWindow(new NativeWindowSettings() { });
             Assert.NotNull(tkGameWindow);
+            tkGameWindow.MakeCurrent();
 
             typeO.Context.Game.MainWindow = new TestWindowMock()
             {

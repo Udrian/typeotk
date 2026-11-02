@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using TypeOEngine.Typedeaf.TK.Engine.Graphics.Interfaces;
+using TypeOTK.Typedeaf.TK.Engine.Graphics;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -24,6 +25,7 @@ namespace TypeOEngine.Typedeaf.TK
             protected PrimitiveType PrimitiveType { get; private set; }
             private int VertexArrayID { get; set; }
             private int VertexBufferID { get; set; }
+            private int ContextGeneration { get; set; }
 
             /// <summary>
             /// Create a uninitialized Primitive of specified length
@@ -34,10 +36,24 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 Vertices = new T[vertexCount];
 
+                PrimitiveDrawType = primitiveDrawType;
+            }
+
+            private void EnsureBuffers()
+            {
+                if (VertexArrayID != 0 && ContextGeneration == TKGLHelper.ContextGeneration) return;
+
+                CreateBuffers();
+                ContextGeneration = TKGLHelper.ContextGeneration;
+            }
+
+            /// <summary>
+            /// Creates the GL objects of the Primitive in the current GL context
+            /// </summary>
+            protected virtual void CreateBuffers()
+            {
                 VertexArrayID = GL.GenVertexArray();
                 VertexBufferID = GL.GenBuffer();
-
-                PrimitiveDrawType = primitiveDrawType;
             }
 
             /// <summary>
@@ -73,6 +89,7 @@ namespace TypeOEngine.Typedeaf.TK
 
                 if (Vertices.Length == 0) return;
 
+                EnsureBuffers();
                 GL.BindVertexArray(VertexArrayID);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferID);
                 GL.EnableVertexAttribArray(0);

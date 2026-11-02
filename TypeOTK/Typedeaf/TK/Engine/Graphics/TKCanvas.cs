@@ -44,6 +44,8 @@ namespace TypeOEngine.Typedeaf.TK
 
             protected override void Initialize()
             {
+                TKGLHelper.ContextGeneration++;
+
                 Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
                 TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
                 

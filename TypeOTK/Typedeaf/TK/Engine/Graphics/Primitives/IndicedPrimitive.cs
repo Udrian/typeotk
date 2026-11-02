@@ -29,8 +29,14 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 Indices = new uint[indiceCount];
 
-                ElementBufferID = GL.GenBuffer();
                 Wireframe = false;
+            }
+
+            /// <inheritdoc/>
+            protected override void CreateBuffers()
+            {
+                base.CreateBuffers();
+                ElementBufferID = GL.GenBuffer();
             }
 
             /// <inheritdoc/>

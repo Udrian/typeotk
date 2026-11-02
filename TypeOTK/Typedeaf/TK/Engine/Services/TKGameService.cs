@@ -34,11 +34,8 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
             for (var i = 0; i < TKGames.Count; i++)
             {
                 TKGames[i].Close();
+                NativeWindow.ProcessWindowEvents(false);
                 TKGames[i].Dispose();
-                while (TKGames[i].IsExiting)
-                {
-                    NativeWindow.ProcessWindowEvents(false);
-                }
                 TKGames.RemoveAt(i);
                 i--;
             }
