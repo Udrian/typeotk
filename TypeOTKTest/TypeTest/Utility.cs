@@ -23,6 +23,11 @@ namespace TypeOTKTest.TypeTest
             return typeO;
         }
 
+        public static void SetTestContentBasePath(TypeO typeO)
+        {
+            typeO.Context.Game.ContentLoader.BasePath = AppContext.BaseDirectory;
+        }
+
         public static T GetProperty<T>(object obj, string property)
         {
             Type t = obj.GetType();

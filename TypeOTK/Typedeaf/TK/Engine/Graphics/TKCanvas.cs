@@ -46,7 +46,7 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
                 TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
-
+                
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
                 //TODO: Take a second look at this, shouldn't have to but left and top on -1
                 ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(-1, (float)Viewport.Size.X - 1, (float)Viewport.Size.Y, -1, -1.0f, 100.0f);
@@ -70,7 +70,6 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 GL.ClearColor(clearColor.Rf, clearColor.Gf, clearColor.Bf, clearColor.Af);
                 GL.Clear(ClearBufferMask.ColorBufferBit);
-                TKFont.Drawing.DrawingPrimitives.Clear();
 
                 TKGLHelper.CheckGLError("", ErrorCode.InvalidEnum);
             }
@@ -78,8 +77,6 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void Present()
             {
-                TKFont.Drawing.RefreshBuffers();
-                TKFont.Drawing.Draw();
                 GL.Finish();
                 TKGame?.Context.SwapBuffers();
 
@@ -90,7 +87,6 @@ namespace TypeOEngine.Typedeaf.TK
             public override void PreDraw()
             {
                 ViewMatrix = Matrix4.CreateTranslation(-(float)WorldTranslation.X, -(float)WorldTranslation.Y, -(float)WorldTranslation.Z);
-                //TKFont.Drawing.ProjectionMatrix = ProjectionMatrix * Matrix4.CreateScale(1, -1, 1);
             }
 
             /// <inheritdoc/>
@@ -107,7 +103,7 @@ namespace TypeOEngine.Typedeaf.TK
 
                 TKGLHelper.CheckGLError();
 
-                var texture = Game.ContentLoader.CreateTexture<TKTexture>(new Vec2i((int)screenRect.Size.X, (int)screenRect.Size.Y), new ReadOnlySpan<byte>(data));
+                var texture = Game.ContentLoader.CreateTexture<TKTexture>(new Vec2i((int)screenRect.Size.X, (int)screenRect.Size.Y), data);
                 texture.FlipVertical();
 
                 return texture;

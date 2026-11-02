@@ -265,7 +265,10 @@ namespace TypeDTK.View.Viewer
             else
             {
                 Game.Window.Size = new Vec2i(size);
-                Game.Canvas.Viewport = new Rectangle(Game.Canvas.Viewport.Pos, size);
+                if(Game.Canvas != null)
+                {
+                    Game.Canvas.Viewport = new Rectangle(Game.Canvas.Viewport.Pos, size);
+                }
             }
         }
 

@@ -1,19 +1,19 @@
 {
-    "name": "TypeOTK",
-    "version": "0.1.0",
-    "externals": ["Shaders/tshader.frag", "Shaders/tshader.vert", "Shaders/shader.frag", "Shaders/shader.vert"],
-    "dependencies": [
-        "Udrian@TypeOCore-0.1.0.dev",
-        "Udrian@TypeD-0.1.0.dev;dev",
-        "Udrian@TypeODesktop-0.1.0.dev",
-		"OpenTK-4.8.2;nuget",
-		"SixLabors.ImageSharp-3.1.11;nuget",
-		"StbImageSharp-2.30.15;nuget",
-		"System.Drawing.Common-9.0.9;nuget",
-		"Wayfinder.QuickFont-1.0.0;nuget",
-        "Xunit.StaFact-1.1.11;nuget;test"
-    ],
-    "type": "module",
-    "devModuleName": "TypeDTK",
-    "testName": "TypeOTKTest"
+  "name": "TypeOTK",
+  "version": "0.1.0",
+  "externals": ["Shaders/tshader.frag", "Shaders/tshader.vert", "Shaders/shader.frag", "Shaders/shader.vert"],
+  "dependencies": [
+    "Udrian@TypeOCore-0.1.0.dev",
+    "Udrian@TypeD-0.1.0.dev;dev",
+    "Udrian@TypeODesktop-0.1.0.dev;dev",
+    "OpenTK-4.9.4;nuget",
+    "StbImageSharp-2.30.16;nuget",
+    "StbImageWriteSharp-1.16.7;nuget",
+    "System.Drawing.Common-10.0.14;nuget",
+    "OpenTK.Mathematics-4.9.4;nuget",
+    "FontStashSharp.PlatformAgnostic-1.6.2;nuget"
+  ],
+  "type": "module",
+  "devModuleName": "TypeDTK",
+  "testName": "TypeOTKTest"
 }

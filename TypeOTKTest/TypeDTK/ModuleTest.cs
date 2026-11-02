@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using TypeD.Models.Interfaces;
 using TypeDTK.View.Viewer;
 using TypeOTKTest.TypeTest;
@@ -6,7 +5,7 @@ namespace TypeDTKTest;
 
 public partial class ModuleTest
 {
-    [StaFact]
+    [Fact]
     public void StartInitializerTest()
     {
         Assert.NotNull(TypeDTKTestExtension.Initializer);
@@ -17,19 +16,20 @@ public partial class ModuleTest
         TypeDTKTestExtension.Initializer.Uninitializer();
     }
 
-    [StaFact]
-    public void DisplayFakeGameViewer()
+    [Fact]
+    public void InitializeFakeGameViewer()
     {
-        Window window = new Window();
-        Grid grid = new Grid();
-        TKViewer tkViewer = new TKViewer();
-        grid.Children.Add(tkViewer);
-        
-        window.Content = grid;
-
-        //TODO: Should create a proper component that we could test
-        tkViewer.Init();
-
-        window.Show();
+        var initializer = TypeDTKTestExtension.Initializer;
+        initializer.Initializer(null);
+        try
+        {
+            var tkViewer = new TKViewer();
+            tkViewer.Init();
+            Assert.NotNull(Utility.GetProperty<object>(tkViewer, "Viewer"));
+        }
+        finally
+        {
+            initializer.Uninitializer();
+        }
     }
 }
