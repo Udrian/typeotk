@@ -9,17 +9,26 @@ namespace TypeOEngine.Typedeaf.TK
 {
     namespace Engine.Graphics
     {
+        /// <summary>Compiles and links a vertex/fragment shader program and sets uniforms on it.</summary>
         public class Shader
         {
+            /// <summary>Gets the path of the vertex shader source file.</summary>
             public string VertexShaderSourcePath { get; private set; }
+            /// <summary>Gets the vertex shader source code.</summary>
             public string VertexShaderSource { get; private set; }
+            /// <summary>Gets the path of the fragment shader source file.</summary>
             public string FragmentShaderSourcePath { get; private set; }
+            /// <summary>Gets the fragment shader source code.</summary>
             public string FragmentShaderSource { get; private set; }
 
+            /// <summary>Gets the OpenGL program handle.</summary>
             public int Handle { get; private set; }
 
             private readonly Dictionary<string, int> UniformLocations;
 
+            /// <summary>Initializes a new instance of the <see cref="Shader"/> class by loading and linking the shader sources.</summary>
+            /// <param name="vertexShaderSourcePath">The path of the vertex shader source.</param>
+            /// <param name="fragmentShaderSourcePath">The path of the fragment shader source.</param>
             public Shader(string vertexShaderSourcePath, string fragmentShaderSourcePath)
             {
                 Handle = GL.CreateProgram();
@@ -95,6 +104,9 @@ namespace TypeOEngine.Typedeaf.TK
                 return shader;
             }
 
+            /// <summary>Sets an integer uniform.</summary>
+            /// <param name="name">The uniform name.</param>
+            /// <param name="value">The value.</param>
             public void Set(string name, int value)
             {
                 Use();
@@ -102,6 +114,9 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Sets a float uniform.</summary>
+            /// <param name="name">The uniform name.</param>
+            /// <param name="value">The value.</param>
             public void Set(string name, float value)
             {
                 Use();
@@ -109,6 +124,9 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Sets a vec4 uniform from a color.</summary>
+            /// <param name="name">The uniform name.</param>
+            /// <param name="value">The color.</param>
             public void Set(string name, Color value)
             {
                 Use();
@@ -116,6 +134,12 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Sets a vec4 uniform.</summary>
+            /// <param name="name">The uniform name.</param>
+            /// <param name="x">The X component.</param>
+            /// <param name="y">The Y component.</param>
+            /// <param name="z">The Z component.</param>
+            /// <param name="w">The W component.</param>
             public void Set(string name, double x, double y, double z, double w)
             {
                 Use();
@@ -123,6 +147,9 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Sets a vec3 uniform.</summary>
+            /// <param name="name">The uniform name.</param>
+            /// <param name="value">The vector.</param>
             public void Set(string name, Vec3 value)
             {
                 Use();
@@ -130,6 +157,9 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Sets a mat4 uniform.</summary>
+            /// <param name="name">The uniform name.</param>
+            /// <param name="matrix">The matrix.</param>
             public void Set(string name, Matrix4 matrix)
             {
                 Use();
@@ -137,12 +167,14 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Deletes the OpenGL program.</summary>
             public void Cleanup()
             {
                 GL.DeleteProgram(Handle);
                 TKGLHelper.CheckGLError();
             }
 
+            /// <summary>Activates this program for subsequent draw calls.</summary>
             public void Use()
             {
                 GL.UseProgram(Handle);

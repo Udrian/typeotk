@@ -26,12 +26,17 @@ namespace TypeOEngine.Typedeaf.TK
             /// </summary>
             public TKGameWindow TKGame { get; set; }
 
+            /// <summary>Gets the shader used for untextured primitives.</summary>
             public Shader Shader { get; private set; }
+            /// <summary>Gets the shader used for textured drawing.</summary>
             public Shader TextureShader { get; private set; }
 
+            /// <summary>Gets or sets the view matrix.</summary>
             public Matrix4 ViewMatrix { get; set; }
+            /// <summary>Gets or sets the projection matrix.</summary>
             public Matrix4 ProjectionMatrix { get; set; }
 
+            /// <summary>Gets or sets the game this canvas belongs to.</summary>
             public Game Game { get; set; }
 
             /// <inheritdoc/>
@@ -42,6 +47,7 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGame = tKGame;
             }
 
+            /// <inheritdoc/>
             protected override void Initialize()
             {
                 TKGLHelper.ContextGeneration++;
@@ -59,6 +65,7 @@ namespace TypeOEngine.Typedeaf.TK
                 TKGLHelper.CheckGLError();
             }
 
+            /// <inheritdoc/>
             protected override void Cleanup()
             {
                 Shader.Cleanup();

@@ -27,6 +27,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 {
     private readonly ConcurrentQueue<Action> PendingOperations = new();
     private bool GameInitialized { get; set; }
+    /// <summary>Gets or sets the project being viewed.</summary>
     public Project Project { get; set; }
 
     /// <summary>
@@ -40,15 +41,18 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private readonly HashSet<GlfwMouseButton> MouseButtonsDown = new();
     private readonly HashSet<GlfwMouseButton> PreviousMouseButtonsDown = new();
 
+    /// <summary>Gets the component currently loaded into the viewer, or <c>null</c>.</summary>
     public Component Component { get; private set; }
 
     private FakeViewer Viewer { get; set; }
 
+    /// <summary>Initializes a new instance of the <see cref="TKViewer"/> class.</summary>
     public TKViewer()
     {
         GameInitialized = false;
     }
 
+    /// <summary>Creates the underlying viewer with the desktop and TK modules and hooks size changes.</summary>
     public void Init()
     {
         Viewer = new FakeViewer(Project, new List<Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>>()
@@ -59,6 +63,8 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         this.SizeChanged += (object sender, SizeChangedEventArgs e) => { SetWindowSize(e.NewSize); };
     }
 
+    /// <summary>Queues loading the component into the viewer on the next render.</summary>
+    /// <param name="component">The component to display.</param>
     public void Load(Component component)
     {
         PendingOperations.Enqueue(() =>
@@ -73,6 +79,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         });
     }
 
+    /// <summary>Queues clearing the viewer on the next render.</summary>
     public void Unload()
     {
         PendingOperations.Enqueue(() =>
@@ -82,6 +89,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         });
     }
 
+    /// <inheritdoc/>
     protected override void OpenTkInit()
     {
         if (GameInitialized) return;
@@ -105,6 +113,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
             GL4.LoadBindings(bindingsContext);
     }
 
+    /// <inheritdoc/>
     protected override void OpenTkTeardown()
     {
         if (Viewer != null)
@@ -113,6 +122,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         GameInitialized = false;
     }
 
+    /// <inheritdoc/>
     protected override void OpenTkRender()
     {
         MouseState = new MouseStateSnapshot(
@@ -140,24 +150,28 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 
 
 
+    /// <inheritdoc/>
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
         UpdateMouseState(e);
     }
 
+    /// <inheritdoc/>
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
         UpdateMouseState(e);
     }
 
+    /// <inheritdoc/>
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
         UpdateMouseState(e);
     }
 
+    /// <inheritdoc/>
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
