@@ -1,7 +1,12 @@
 {
   "name": "TypeOTK",
   "version": "0.1.0",
-  "externals": ["Shaders/tshader.frag", "Shaders/tshader.vert", "Shaders/shader.frag", "Shaders/shader.vert"],
+  "externals": [
+    "Shaders/tshader.frag",
+    "Shaders/tshader.vert",
+    "Shaders/shader.frag",
+    "Shaders/shader.vert"
+  ],
   "dependencies": [
     "Udrian@TypeOCore-0.1.0.dev",
     "Udrian@TypeD-0.1.0.dev;dev",
@@ -14,6 +19,26 @@
     "FontStashSharp.PlatformAgnostic-1.6.2;nuget"
   ],
   "type": "module",
-  "devModuleName": "TypeDTK",
-  "testName": "TypeOTKTest"
+  "project": [
+    {
+      "Name": "TypeOTK",
+      "type": "",
+      "depends_on": []
+    },
+    {
+      "Name": "TypeDTK",
+      "type": "dev",
+      "depends_on": [
+        "TypeOTK"
+      ]
+    },
+    {
+      "Name": "TypeOTKTest",
+      "type": "test",
+      "depends_on": [
+        "TypeOTK",
+        "TypeDTK"
+      ]
+    }
+  ]
 }
