@@ -5,7 +5,8 @@
     "Shaders/tshader.frag",
     "Shaders/tshader.vert",
     "Shaders/shader.frag",
-    "Shaders/shader.vert"
+    "Shaders/shader.vert",
+    "Assets/Icons/**;dev"
   ],
   "dependencies": [
     "Udrian@TypeOCore-0.1.0.dev",
@@ -16,7 +17,19 @@
     "StbImageWriteSharp-1.16.7;nuget",
     "System.Drawing.Common-10.0.14;nuget",
     "OpenTK.Mathematics-4.9.4;nuget",
-    "FontStashSharp.PlatformAgnostic-1.6.2;nuget"
+    "FontStashSharp.PlatformAgnostic-1.6.2;nuget",
+    "Avalonia-12.1.4;nuget",
+    "OpenTKAvalonia-1.0.0;nuget",
+    "Tmds.DBus.Protocol-0.94.1;nuget",
+    "Avalonia.Desktop-12.1.4;nuget;dev",
+    "Avalonia.Themes.Fluent-12.1.4;nuget;dev",
+    "Avalonia.Fonts.Inter-12.1.4;nuget;dev",
+    "Avalonia.Diagnostics-11.3.22;nuget;dev",
+    "coverlet.collector-10.1.0;nuget;test",
+    "Microsoft.NET.Test.Sdk-18.11.0;nuget;test",
+    "OpenTK.GLWpfControl-4.3.6;nuget;test",
+    "xunit-2.9.3;nuget;test",
+    "xunit.runner.visualstudio-4.0.1;nuget;test"
   ],
   "type": "module",
   "project": [
