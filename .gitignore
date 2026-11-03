@@ -477,6 +477,6 @@ $RECYCLE.BIN/
 *.lnk
 
 # TypeO
-dependency_override
+typeo_override.json
 *.sln
 *.csproj
