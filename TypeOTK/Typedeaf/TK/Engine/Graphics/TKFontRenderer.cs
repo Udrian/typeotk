@@ -1,6 +1,7 @@
 using FontStashSharp.Interfaces;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using TypeOEngine.Typedeaf.Core.Entities;
 using TypeOTK.Typedeaf.TK.Engine.Graphics;
 
 namespace TypeOEngine.Typedeaf.TK
@@ -47,6 +48,7 @@ void main(void)
             private bool resourcesCreated;
             private float offsetX;
             private float offsetY;
+            private Flipped currentFlipped;
 
             public ITexture2DManager TextureManager => this;
 
@@ -55,10 +57,19 @@ void main(void)
             /// </summary>
             public void Begin(float x, float y)
             {
+                Begin(x, y, Flipped.None);
+            }
+
+            /// <summary>
+            /// Sets the origin the glyph quads are drawn relative to. Glyph space is y-down, the screen is y-up.
+            /// </summary>
+            public void Begin(float x, float y, Flipped flipped)
+            {
                 CreateResources();
 
                 offsetX = x;
                 offsetY = y;
+                currentFlipped = flipped;
 
                 var viewport = new int[4];
                 GL.GetInteger(GetPName.Viewport, viewport);
@@ -111,6 +122,37 @@ void main(void)
 
             public void DrawQuad(object texture, ref VertexPositionColorTexture topLeft, ref VertexPositionColorTexture topRight, ref VertexPositionColorTexture bottomLeft, ref VertexPositionColorTexture bottomRight)
             {
+                // Apply flipping to texture coordinates if needed
+                if (currentFlipped != Flipped.None)
+                {
+                    bool flipHorizontal = currentFlipped == Flipped.Horizontal || currentFlipped == Flipped.Both;
+                    bool flipVertical = currentFlipped == Flipped.Vertical || currentFlipped == Flipped.Both;
+
+                    if (flipHorizontal)
+                    {
+                        // Swap X texture coordinates
+                        var tempX = topLeft.TextureCoordinate.X;
+                        topLeft.TextureCoordinate.X = topRight.TextureCoordinate.X;
+                        topRight.TextureCoordinate.X = tempX;
+
+                        tempX = bottomLeft.TextureCoordinate.X;
+                        bottomLeft.TextureCoordinate.X = bottomRight.TextureCoordinate.X;
+                        bottomRight.TextureCoordinate.X = tempX;
+                    }
+
+                    if (flipVertical)
+                    {
+                        // Swap Y texture coordinates
+                        var tempY = topLeft.TextureCoordinate.Y;
+                        topLeft.TextureCoordinate.Y = bottomLeft.TextureCoordinate.Y;
+                        bottomLeft.TextureCoordinate.Y = tempY;
+
+                        tempY = topRight.TextureCoordinate.Y;
+                        topRight.TextureCoordinate.Y = bottomRight.TextureCoordinate.Y;
+                        bottomRight.TextureCoordinate.Y = tempY;
+                    }
+                }
+
                 // Triangle strip order: top-left, top-right, bottom-left, bottom-right
                 WriteVertex(0, ref topLeft);
                 WriteVertex(1, ref topRight);

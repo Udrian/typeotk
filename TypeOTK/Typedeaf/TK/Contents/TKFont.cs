@@ -4,6 +4,7 @@ using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
 using TypeOEngine.Typedeaf.Core.Engine.Interfaces;
+using TypeOEngine.Typedeaf.Core.Entities;
 using TypeOEngine.Typedeaf.TK.Engine.Graphics;
 using TypeOTK.Typedeaf.TK.Engine.Graphics;
 using Color = TypeOEngine.Typedeaf.Core.Common.Color;
@@ -79,9 +80,10 @@ namespace TypeOEngine.Typedeaf.TK
             /// <param name="text">Text to draw</param>
             /// <param name="position">Top left position of the text</param>
             /// <param name="color">Color of the text</param>
-            public void Draw(string text, Vec2 position, Color color)
+            /// <param name="flipped">How the text should be flipped</param>
+            public void Draw(string text, Vec2 position, Color color, Flipped flipped = Flipped.None)
             {
-                Renderer.Begin((float)position.X, (float)position.Y);
+                Renderer.Begin((float)position.X, (float)position.Y, flipped);
                 SpriteFont.DrawText(Renderer, text, System.Numerics.Vector2.Zero, new FSColor(color.R, color.G, color.B, color.A));
                 Renderer.End();
 
