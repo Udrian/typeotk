@@ -38,7 +38,10 @@ namespace TypeOEngine.Typedeaf.TK
             {
                 Release();
 
+                // Obsolete setting kept to preserve the current glyph rendering behavior.
+#pragma warning disable CS0618
                 var fontSystem = new FontSystem(new FontSystemSettings { PremultiplyAlpha = false });
+#pragma warning restore CS0618
                 fontSystem.AddFont(File.ReadAllBytes(path));
 
                 FontSystem = fontSystem;
