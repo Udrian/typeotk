@@ -10,7 +10,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using TypeD.Models.Data;
+using TypeD.Models.Interfaces;
 using TypeD.View.Viewer;
+using TypeD.ViewModel;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Desktop;
 using TypeOEngine.Typedeaf.Desktop.Engine.Hardwares.Interfaces;
@@ -45,6 +47,8 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     public Component Component { get; private set; }
 
     private FakeViewer Viewer { get; set; }
+    private bool GameCrashed { get; set; }
+    private ICrashModel CrashModel { get; } = ViewModelBase.ResourceModel?.Get<ICrashModel>();
 
     /// <summary>Initializes a new instance of the <see cref="TKViewer"/> class.</summary>
     public TKViewer()
@@ -94,7 +98,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         if (GameInitialized) return;
         LoadAllGLBindings();
-        Viewer.Start();
+        RunGame(() => Viewer.Start());
         
         SetWindowSize(new Size(Bounds.Size.Width, Bounds.Size.Height));
         GameInitialized = true;
@@ -139,13 +143,35 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         PreviousMouseButtonsDown.UnionWith(MouseButtonsDown);
 
 
-        while (PendingOperations.TryDequeue(out var operation))
+        RunGame(() =>
         {
-            operation();
-        }
+            while (PendingOperations.TryDequeue(out var operation))
+            {
+                operation();
+            }
 
-        if (Viewer != null)
-            Viewer.UpdateAndDraw(MouseState);
+            if (Viewer != null)
+                Viewer.UpdateAndDraw(MouseState);
+        });
+    }
+
+    // Runs game code; a crash of the game or a module stops this viewer's game and is reported, so the editor can reload it
+    private void RunGame(Action action)
+    {
+        if (GameCrashed)
+            return;
+
+        try
+        {
+            action();
+        }
+        catch (Exception exception) when (CrashModel?.Identify(exception) != null)
+        {
+            GameCrashed = true;
+            PendingOperations.Clear();
+            // Reported after this render pass, since stopping the game removes this control
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => CrashModel.Report(exception));
+        }
     }
 
 

@@ -28,6 +28,8 @@ namespace TypeDTK.View.Viewer
 
         private IHookModel HookModel { get; set; }
         private ConcurrentQueue<ContentLoadRequestedHook> PendingContentLoads { get; } = new();
+        private List<Action> RemoveHooks { get; } = new();
+        private bool Closed { get; set; }
 
         public FakeViewer(Project project, List<Tuple<Module, ModuleOption>> modules)
         {
@@ -43,7 +45,7 @@ namespace TypeDTK.View.Viewer
                 FakeTypeO.LoadModule(module.Item1, module.Item2);
             }
 
-            HookModel.AddHook<PropertyChangedHook>((hook) =>
+            AddHook<PropertyChangedHook>((hook) =>
             {
                 TypeOObject obj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Component.FullParentPath + hook.Component.ID);
                 var objType = obj.GetType();
@@ -53,15 +55,15 @@ namespace TypeDTK.View.Viewer
                     return;
                 objType.GetProperty(hook.Property.Name)?.SetValue(obj, value);
             });
-            HookModel.AddHook<ContentLoadRequestedHook>((hook) =>
+            AddHook<ContentLoadRequestedHook>((hook) =>
             {
                 PendingContentLoads.Enqueue(hook);
             });
-            HookModel.AddHook<ComponentAddedHook>((hook) =>
+            AddHook<ComponentAddedHook>((hook) =>
             {
                 AddComponentToView(project, hook.Child, hook.Parent);
             });
-            HookModel.AddHook<ComponentMovedHook>((hook) =>
+            AddHook<ComponentMovedHook>((hook) =>
             {
                 // Objects are appended on creation, so re-create the moved node and every later sibling to keep the order.
                 var siblings = hook.Parent.Children.ToList();
@@ -73,12 +75,12 @@ namespace TypeDTK.View.Viewer
                 foreach (var sibling in affected)
                     AddComponentToView(project, sibling, hook.Parent);
             });
-            HookModel.AddHook<ComponentRemovedHook>((hook) =>
+            AddHook<ComponentRemovedHook>((hook) =>
             {
                 RemoveComponentObjects(project, hook.Child);
                 hook.Child.ID = null;
             });
-            HookModel.AddHook<ComponentRemovedStateChangedHook>((hook) =>
+            AddHook<ComponentRemovedStateChangedHook>((hook) =>
             {
                 var parentObj = FakeTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Parent.FullParentPath + hook.Parent.ID);
                 if (hook.Child.Removed)
@@ -311,7 +313,21 @@ namespace TypeDTK.View.Viewer
 
         public void Close()
         {
+            if (Closed) return;
+            Closed = true;
+
+            // The viewer is recreated when the game is reloaded, so the old game must stop receiving editor changes
+            foreach (var removeHook in RemoveHooks)
+                removeHook();
+            RemoveHooks.Clear();
+
             Game.Exit();
+        }
+
+        private void AddHook<T>(Action<T> action) where T : Hook, new()
+        {
+            HookModel.AddHook(action);
+            RemoveHooks.Add(() => HookModel.RemoveHook(action));
         }
     }
 }
