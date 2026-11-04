@@ -6,7 +6,7 @@ using TypeOEngine.Typedeaf.Desktop.Engine.Services;
 
 namespace TypeDTK.View.Viewer
 {
-    internal class FakeGame : Game
+    internal class EditorGame : Game
     {
         public Vec2i InitSize { get; set; }
         private WindowService WindowService { get; set; }
@@ -25,7 +25,7 @@ namespace TypeDTK.View.Viewer
             };
 
             Window.Canvas = Canvas = WindowService.CreateCanvas(Window);
-            Scenes.SetScene<FakeScene>();
+            Scenes.SetScene<EditorScene>();
         }
 
         protected override void Cleanup()

@@ -3,7 +3,7 @@ using TypeOEngine.Typedeaf.Core;
 
 namespace TypeDTK.View.Viewer
 {
-    internal class FakeScene : Scene
+    internal class EditorScene : Scene
     {
         protected override void Initialize()
         {

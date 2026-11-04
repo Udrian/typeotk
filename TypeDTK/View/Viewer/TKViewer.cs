@@ -63,7 +63,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private Component SelectedComponent { get; set; }
     private IHookModel HookModel { get; } = ViewModelBase.ResourceModel?.Get<IHookModel>();
 
-    private FakeViewer Viewer { get; set; }
+    private EditorViewer Viewer { get; set; }
     private bool GameCrashed { get; set; }
     private ICrashModel CrashModel { get; } = ViewModelBase.ResourceModel?.Get<ICrashModel>();
 
@@ -78,7 +78,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     /// <summary>Creates the underlying viewer with the desktop and TK modules and hooks size changes.</summary>
     public void Init()
     {
-        Viewer = new FakeViewer(Project, new List<Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>>()
+        Viewer = new EditorViewer(Project, new List<Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>>()
             {
                 new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new DesktopModule(), new DesktopModuleOption() {}),
                 new Tuple<TypeOEngine.Typedeaf.Core.Engine.Module, TypeOEngine.Typedeaf.Core.Engine.ModuleOption>(new TKModule(), new TKModuleOption() {})
