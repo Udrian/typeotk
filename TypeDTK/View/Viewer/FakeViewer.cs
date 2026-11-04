@@ -7,6 +7,7 @@ using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
 using TypeD.Models.Interfaces;
+using TypeD.View.Viewer;
 using TypeD.ViewModel;
 using TypeDCore.Models.Data.Hooks;
 using TypeOEngine.Typedeaf.Core;
@@ -16,6 +17,7 @@ using TypeOEngine.Typedeaf.Core.Engine.Contents;
 using TypeOEngine.Typedeaf.Core.Entities;
 using TypeOEngine.Typedeaf.Core.Entities.Drawables;
 using TypeOEngine.Typedeaf.Desktop.Engine.Hardwares.Interfaces;
+using TypeOEngine.Typedeaf.TK.Engine.Graphics;
 using Module = TypeOEngine.Typedeaf.Core.Engine.Module;
 
 namespace TypeDTK.View.Viewer
@@ -270,8 +272,16 @@ namespace TypeDTK.View.Viewer
                 if(Game.Canvas != null)
                 {
                     Game.Canvas.Viewport = new Rectangle(Game.Canvas.Viewport.Pos, size);
+                    // Keeps one world unit per viewer unit, the editor camera maps the pointer with that
+                    (Game.Canvas as TKCanvas)?.UpdateProjection();
                 }
             }
+        }
+
+        public void SetCamera(ViewerCamera camera)
+        {
+            if (Game != null)
+                Game.EditorCamera = camera;
         }
 
         public void UpdateAndDraw(MouseStateSnapshot mouseState)

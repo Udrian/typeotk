@@ -93,6 +93,39 @@ public class GraphicsTest
     }
 
     [Fact]
+    public void Canvas_PreDraw_ScalesViewAfterTranslatingByWorldScale()
+    {
+        Utility.DrawTest((context) =>
+        {
+            var canvas = (TKCanvas)context.Game.Scenes.Canvas;
+            canvas.WorldTranslation = new Vec3(10, 20, 0);
+            canvas.WorldScale = 2;
+
+            canvas.PreDraw();
+
+            // A world point at the translation ends up at the view origin, and distances from it are doubled
+            Assert.Equal(new Vector4(0, 0, 0, 1), new Vector4(10, 20, 0, 1) * canvas.ViewMatrix);
+            Assert.Equal(new Vector4(10, 20, 0, 1), new Vector4(15, 30, 0, 1) * canvas.ViewMatrix);
+            context.Exit();
+        }).Start();
+    }
+
+    [Fact]
+    public void Canvas_UpdateProjection_FollowsTheViewport()
+    {
+        Utility.DrawTest((context) =>
+        {
+            var canvas = (TKCanvas)context.Game.Scenes.Canvas;
+            canvas.Viewport = new Rectangle(0, 0, 320, 240);
+
+            canvas.UpdateProjection();
+
+            Assert.Equal(Matrix4.CreateOrthographicOffCenter(-1, 319, 240, -1, -1f, 100f), canvas.ProjectionMatrix);
+            context.Exit();
+        }).Start();
+    }
+
+    [Fact]
     public void Canvas_PreDraw_TranslatesViewByNegatedWorldTranslation()
     {
         Utility.DrawTest((context) =>

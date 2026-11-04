@@ -56,8 +56,7 @@ namespace TypeOEngine.Typedeaf.TK
                 TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
                 
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
-                //TODO: Take a second look at this, shouldn't have to but left and top on -1
-                ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(-1, (float)Viewport.Size.X - 1, (float)Viewport.Size.Y, -1, -1.0f, 100.0f);
+                UpdateProjection();
 
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -96,6 +95,17 @@ namespace TypeOEngine.Typedeaf.TK
             public override void PreDraw()
             {
                 ViewMatrix = Matrix4.CreateTranslation(-(float)WorldTranslation.X, -(float)WorldTranslation.Y, -(float)WorldTranslation.Z);
+                if (WorldScale != 1)
+                    ViewMatrix *= Matrix4.CreateScale((float)WorldScale, (float)WorldScale, 1);
+            }
+
+            /// <summary>
+            /// Rebuilds the projection so one world unit maps to one viewport unit, e.g. after the viewport was resized.
+            /// </summary>
+            public void UpdateProjection()
+            {
+                //TODO: Take a second look at this, shouldn't have to but left and top on -1
+                ProjectionMatrix = Matrix4.CreateOrthographicOffCenter(-1, (float)Viewport.Size.X - 1, (float)Viewport.Size.Y, -1, -1.0f, 100.0f);
             }
 
             /// <inheritdoc/>
