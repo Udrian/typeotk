@@ -1,6 +1,9 @@
 ﻿using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Core.Common;
+using TypeD.Models.Interfaces;
+using TypeD.ViewModel;
+using TypeDCore.Models.Data.SettingContexts;
 
 namespace TypeDTK.View.Viewer
 {
@@ -9,7 +12,8 @@ namespace TypeDTK.View.Viewer
         protected override void Initialize()
         {
             base.Initialize();
-            ClearColor = new Color(28, 3, 51);
+            ClearColor = ViewModelBase.ResourceModel.Get<ISettingModel>()
+                .GetContext<ViewerSettingContext>().ClearColor.Value;
         }
 
         protected override void Cleanup()

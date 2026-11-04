@@ -49,6 +49,12 @@ namespace TypeDTK.View.Viewer
                 EditorTypeO.LoadModule(module.Item1, module.Item2);
             }
 
+            AddDeferredHook<ViewerClearColorChangedHook>((hook) =>
+            {
+                if (Game.Scenes.CurrentScene is EditorScene scene)
+                    scene.ClearColor = hook.Color;
+            });
+
             AddDeferredHook<PropertyChangedHook>((hook) =>
             {
                 TypeOObject obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Component.FullParentPath + hook.Component.ID);
