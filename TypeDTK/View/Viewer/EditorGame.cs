@@ -41,9 +41,7 @@ namespace TypeDTK.View.Viewer
                 Canvas.WorldTranslation = new Vec3(EditorCamera.X, EditorCamera.Y, 0);
                 Canvas.WorldScale = EditorCamera.Zoom;
             }
-            Canvas.Clear(Color.DarkGray);
             Scenes.Draw();
-            Canvas.Present();
         }
 
         public override void Update(double dt)

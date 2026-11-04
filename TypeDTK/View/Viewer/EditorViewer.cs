@@ -29,7 +29,9 @@ namespace TypeDTK.View.Viewer
         private Project Project { get; set; }
 
         private IHookModel HookModel { get; set; }
-        private ConcurrentQueue<ContentLoadRequestedHook> PendingContentLoads { get; } = new();
+        // Editor hooks are shot on the UI thread, but the view can only be changed while the GL context is
+        // current, so every handler is queued and run from UpdateAndDraw inside the render pass.
+        private ConcurrentQueue<Action> PendingHookOperations { get; } = new();
         private List<Action> RemoveHooks { get; } = new();
         private bool Closed { get; set; }
 
@@ -47,9 +49,11 @@ namespace TypeDTK.View.Viewer
                 EditorTypeO.LoadModule(module.Item1, module.Item2);
             }
 
-            AddHook<PropertyChangedHook>((hook) =>
+            AddDeferredHook<PropertyChangedHook>((hook) =>
             {
                 TypeOObject obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Component.FullParentPath + hook.Component.ID);
+                if (obj == null) // The view may have been cleared or reloaded before this deferred change runs
+                    return;
                 var objType = obj.GetType();
                 var value = hook.Property.Value;
                 var definition = ViewModelBase.ResourceModel.Get<IPropertyModel>().Get(hook.Property.Type);
@@ -57,15 +61,15 @@ namespace TypeDTK.View.Viewer
                     return;
                 objType.GetProperty(hook.Property.Name)?.SetValue(obj, value);
             });
-            AddHook<ContentLoadRequestedHook>((hook) =>
+            AddDeferredHook<ContentLoadRequestedHook>((hook) =>
             {
-                PendingContentLoads.Enqueue(hook);
+                ProcessContentLoad(hook);
             });
-            AddHook<ComponentAddedHook>((hook) =>
+            AddDeferredHook<ComponentAddedHook>((hook) =>
             {
                 AddComponentToView(project, hook.Child, hook.Parent);
             });
-            AddHook<ComponentMovedHook>((hook) =>
+            AddDeferredHook<ComponentMovedHook>((hook) =>
             {
                 // Objects are appended on creation, so re-create the moved node and every later sibling to keep the order.
                 var siblings = hook.Parent.Children.ToList();
@@ -77,12 +81,12 @@ namespace TypeDTK.View.Viewer
                 foreach (var sibling in affected)
                     AddComponentToView(project, sibling, hook.Parent);
             });
-            AddHook<ComponentRemovedHook>((hook) =>
+            AddDeferredHook<ComponentRemovedHook>((hook) =>
             {
                 RemoveComponentObjects(project, hook.Child);
                 hook.Child.ID = null;
             });
-            AddHook<ComponentRemovedStateChangedHook>((hook) =>
+            AddDeferredHook<ComponentRemovedStateChangedHook>((hook) =>
             {
                 var parentObj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Parent.FullParentPath + hook.Parent.ID);
                 if (hook.Child.Removed)
@@ -124,6 +128,11 @@ namespace TypeDTK.View.Viewer
             Game.Scenes.CurrentScene.Entities.Clear();
             Game.Scenes.CurrentScene.Entities.Update(0);
             Game.Scenes.CurrentScene.Drawables.Clear();
+            if(!(Game.Scenes.CurrentScene is EditorScene))
+            {
+                Game.Scenes.ClearScenes();
+                Game.Scenes.SetScene<EditorScene>();
+            }
             HookModel.Shoot(new ViewerUnloadedHook { Project = Project });
         }
 
@@ -133,18 +142,27 @@ namespace TypeDTK.View.Viewer
 
             int i = 0;
             var components = component.Children.Flatten(c => c.Children).ToList();
-            EditorTypeO.Context.ListAllTypeOObjects().ForEach(e =>
+            var objects = EditorTypeO.Context.ListAllTypeOObjects();
+            objects.ForEach(e =>
             {
                 if (e is Drawable || e is Entity || (e is Scene && !(e is EditorScene)))
                 {
                     if (i == 0)
                     {
                         component.ID = e.ID;
+                        if(component.FullName != e.GetType().FullName)
+                            throw new Exception($"Component type '{component.FullName}' does not match the type of the created object '{e.GetType().FullName}'.");
                         HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = e, Component = component });
                     }
                     else
                     {
+                        if(components.Count <= i - 1)
+                        {
+                            throw new Exception("The number of components in the hierarchy does not match the number of created objects in the view.");
+                        }
                         components[i - 1].ID = e.ID;
+                        if (components[i - 1].FullName != e.GetType().FullName)
+                            throw new Exception($"Component type '{components[i - 1].FullName}' does not match the type of the created object '{e.GetType().FullName}'.");
                         HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = e, Component = components[i - 1] });
                     }
                     i++;
@@ -204,6 +222,7 @@ namespace TypeDTK.View.Viewer
             }
             else if (component.IsBasedOn(typeof(Scene)))
             {
+                Game.Scenes.ClearScenes();
                 return Game.Scenes.SetScene(typeInfo);
             }
             return null;
@@ -291,34 +310,34 @@ namespace TypeDTK.View.Viewer
 
             if (EditorTypeO.Context.Game.Initialized)
             {
-                ProcessPendingContentLoads();
+                while (PendingHookOperations.TryDequeue(out var operation))
+                {
+                    operation();
+                }
                 EditorTypeO.Context.ProcessGame();
             }
         }
 
-        private void ProcessPendingContentLoads()
+        private void ProcessContentLoad(ContentLoadRequestedHook request)
         {
-            while (PendingContentLoads.TryDequeue(out var request))
+            var obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(request.Component.FullParentPath + request.Component.ID);
+            var property = obj?.GetType().GetProperty(request.Property.Name);
+            if (property == null)
+                return;
+
+            if (request.Association == null)
             {
-                var obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(request.Component.FullParentPath + request.Component.ID);
-                var property = obj?.GetType().GetProperty(request.Property.Name);
-                if (property == null)
-                    continue;
-
-                if (request.Association == null)
-                {
-                    property.SetValue(obj, null);
-                    continue;
-                }
-
-                SyncContentBasePath();
-                var load = typeof(ContentLoader)
-                    .GetMethod(nameof(ContentLoader.LoadContent), new[] { typeof(string) })
-                    .MakeGenericMethod(request.Association.EngineImplementationType);
-                var content = load.Invoke(Game.ContentLoader, new object[] { request.Path });
-                property.SetValue(obj, content);
-                request.Loaded?.Invoke(content);
+                property.SetValue(obj, null);
+                return;
             }
+
+            SyncContentBasePath();
+            var load = typeof(ContentLoader)
+                .GetMethod(nameof(ContentLoader.LoadContent), new[] { typeof(string) })
+                .MakeGenericMethod(request.Association.EngineImplementationType);
+            var content = load.Invoke(Game.ContentLoader, new object[] { request.Path });
+            property.SetValue(obj, content);
+            request.Loaded?.Invoke(content);
         }
 
         public void Close()
@@ -330,6 +349,7 @@ namespace TypeDTK.View.Viewer
             foreach (var removeHook in RemoveHooks)
                 removeHook();
             RemoveHooks.Clear();
+            PendingHookOperations.Clear();
 
             Game.Exit();
         }
@@ -338,6 +358,12 @@ namespace TypeDTK.View.Viewer
         {
             HookModel.AddHook(action);
             RemoveHooks.Add(() => HookModel.RemoveHook(action));
+        }
+
+        // Defers the handler to the next render pass, where the viewer's GL context is current
+        private void AddDeferredHook<T>(Action<T> action) where T : Hook, new()
+        {
+            AddHook<T>((hook) => PendingHookOperations.Enqueue(() => action(hook)));
         }
     }
 }

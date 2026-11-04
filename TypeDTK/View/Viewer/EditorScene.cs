@@ -1,5 +1,6 @@
 ﻿using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core;
+using TypeOEngine.Typedeaf.Core.Common;
 
 namespace TypeDTK.View.Viewer
 {
@@ -8,6 +9,7 @@ namespace TypeDTK.View.Viewer
         protected override void Initialize()
         {
             base.Initialize();
+            ClearColor = new Color(28, 3, 51);
         }
 
         protected override void Cleanup()
@@ -21,7 +23,9 @@ namespace TypeDTK.View.Viewer
         }
         public override void Draw()
         {
+            Canvas?.Clear(ClearColor);
             DrawStack.Draw(Canvas);
+            Canvas?.Present();
         }
 
         public override void OnEnter(Scene from)
