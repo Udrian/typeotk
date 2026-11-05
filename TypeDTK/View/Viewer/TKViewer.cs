@@ -16,6 +16,8 @@ using TypeD.Models.Interfaces;
 using TypeD.View.Viewer;
 using TypeD.ViewModel;
 using TypeDCore.Models.Data.Hooks;
+using TypeDCore.Models.Interfaces;
+using TypeD.Helpers;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Desktop;
 using TypeOEngine.Typedeaf.Desktop.Engine.Hardwares.Interfaces;
@@ -212,6 +214,47 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         UpdateMouseState(e);
     }
 
+    private async void OpenNodeContextMenu()
+    {
+        var project = Project;
+        var component = Component;
+        var position = ToWorld(MousePosition);
+        var hit = new ViewerHitTestHook { Project = Project, X = position.X, Y = position.Y };
+        HookModel?.Shoot(hit);
+        if (hit.Result != null)
+            HookModel?.Shoot(new ComponentFocusHook { Project = Project, Component = hit.Result, Root = false });
+
+        var menu = new ContextMenu();
+        try
+        {
+            await ViewModelBase.ResourceModel.Get<INodeClipboardModel>().RefreshAsync();
+        }
+        catch (Exception exception) when (exception is System.IO.IOException or System.Text.Json.JsonException or InvalidOperationException or NotSupportedException)
+        {
+            ViewModelBase.ResourceModel.Get<ILogModel>().Log($"Could not read the node clipboard: {exception}");
+        }
+        if (Project != project || Component != component)
+            return;
+        var hook = new ViewerComponentContextMenuHook
+        {
+            Project = Project,
+            OpenedComponent = Component,
+            SelectedComponent = hit.Result,
+            Position = new Vec2(position.X, position.Y),
+            Menu = new TypeD.View.Menu()
+        };
+        HookModel?.Shoot<ComponentContextMenuHook>(hook);
+        var model = new ViewerMenuViewModel { LoadedProject = Project };
+        foreach (var item in hook.Menu.Items)
+            ViewHelper.InitMenu(menu, item, model);
+        menu.Open(this);
+    }
+
+    private sealed class ViewerMenuViewModel : ViewModelBase
+    {
+        public Project LoadedProject { get; init; }
+    }
+
     /// <inheritdoc/>
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
@@ -228,6 +271,11 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
                 BeginPan(GlfwMouseButton.Button1, e);
         }
         UpdateMouseState(e);
+        if (properties.IsRightButtonPressed)
+        {
+            OpenNodeContextMenu();
+            e.Handled = true;
+        }
     }
 
     /// <inheritdoc/>
@@ -308,6 +356,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         base.OnAttachedToVisualTree(e);
         HookModel?.AddHook<ComponentFocusHook>(ComponentFocused);
         HookModel?.AddHook<ViewerCameraHook>(CameraRequested);
+        HookModel?.AddHook<ViewerNodeContextHook>(NodeContextRequested);
     }
 
     /// <inheritdoc/>
@@ -315,6 +364,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         HookModel?.RemoveHook<ComponentFocusHook>(ComponentFocused);
         HookModel?.RemoveHook<ViewerCameraHook>(CameraRequested);
+        HookModel?.RemoveHook<ViewerNodeContextHook>(NodeContextRequested);
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -332,6 +382,15 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
                 Camera.Reset();
                 break;
         }
+    }
+
+    private void NodeContextRequested(ViewerNodeContextHook hook)
+    {
+        if (hook.Project != Project || !IsKeyboardFocusWithin)
+            return;
+        var position = ToWorld(MousePosition);
+        hook.Focused = true;
+        hook.Position = new Vec2(position.X, position.Y);
     }
 
     private void ComponentFocused(ComponentFocusHook hook)

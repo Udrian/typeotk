@@ -73,6 +73,8 @@ namespace TypeDTK.View.Viewer
             });
             AddDeferredHook<ComponentAddedHook>((hook) =>
             {
+                if (hook.Child.ParentComponent != hook.Parent || !hook.Parent.Children.Contains(hook.Child))
+                    return;
                 AddComponentToView(project, hook.Child, hook.Parent);
             });
             AddDeferredHook<ComponentMovedHook>((hook) =>
@@ -87,10 +89,10 @@ namespace TypeDTK.View.Viewer
                 foreach (var sibling in affected)
                     AddComponentToView(project, sibling, hook.Parent);
             });
-            AddDeferredHook<ComponentRemovedHook>((hook) =>
+            AddHook<ComponentRemovedHook>((hook) =>
             {
-                RemoveComponentObjects(project, hook.Child);
-                hook.Child.ID = null;
+                var path = hook.Child.FullParentPath + hook.Child.ID;
+                PendingHookOperations.Enqueue(() => RemoveComponentObjects(project, hook.Child, path));
             });
             AddDeferredHook<ComponentRemovedStateChangedHook>((hook) =>
             {
@@ -241,23 +243,36 @@ namespace TypeDTK.View.Viewer
                 return;
 
             child.ID = addedObject.ID;
-            HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = addedObject, Component = child });
-            foreach (var nested in child.Children.Flatten(c => c.Children))
-            {
-                var nestedObj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(nested.FullParentPath + nested.ID);
-                if (nestedObj != null)
-                    HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = nestedObj, Component = nested });
-            }
-            foreach (var property in child.Properties.Where(p => p.Name != "ID" && child.HasPropertyOverridesFor(p.Name)).ToList())
-                HookModel.Shoot(new PropertyChangedHook() { Component = child, Property = property });
+            SyncAddedComponent(project, child, addedObject);
         }
 
-        private void RemoveComponentObjects(Project project, Component component)
+        private void SyncAddedComponent(Project project, Component component, TypeOObject obj)
         {
-            foreach (var child in component.Children.ToList())
-                RemoveComponentObjects(project, child);
+            if (component.Removed)
+            {
+                RemoveComponentObjects(project, component);
+                return;
+            }
+            HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = obj, Component = component });
+            foreach (var property in component.Properties.Where(p => p.Name != "ID" && !p.ReadOnly && component.HasPropertyOverridesFor(p.Name)).ToList())
+                HookModel.Shoot(new PropertyChangedHook() { Component = component, Property = property });
+            foreach (var child in component.Children)
+            {
+                var nested = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(child.FullParentPath + child.ID);
+                if (nested == null && !child.Removed)
+                    nested = InternalAddComponent(project, child, component);
+                if (nested != null)
+                    SyncAddedComponent(project, child, nested);
+            }
+        }
 
-            var obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(component.FullParentPath + component.ID);
+        private void RemoveComponentObjects(Project project, Component component, string path = null)
+        {
+            path ??= component.FullParentPath + component.ID;
+            foreach (var child in component.Children.ToList())
+                RemoveComponentObjects(project, child, path + "/" + child.ID);
+
+            var obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(path);
             if (obj == null)
                 return;
 
@@ -270,6 +285,7 @@ namespace TypeDTK.View.Viewer
             if (obj is Entity entity)
             {
                 entity.Remove();
+                (entity.Parent?.Entities ?? Game.Scenes.CurrentScene.Entities).ProcessRemovals();
             }
             else if (obj is Drawable drawable)
             {
