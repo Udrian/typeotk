@@ -479,4 +479,5 @@ $RECYCLE.BIN/
 # TypeO
 typeo_override.json
 *.sln
+*.slnx
 *.csproj
