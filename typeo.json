@@ -6,7 +6,8 @@
     "Shaders/tshader.vert",
     "Shaders/shader.frag",
     "Shaders/shader.vert",
-    "Assets/Icons/**;dev"
+    "Assets/Icons/**;dev",
+    "Mock/Resources/**;test"
   ],
   "dependencies": [
     "Udrian@TypeOCore-0.1.0.dev",
@@ -36,14 +37,22 @@
     {
       "Name": "TypeOTK",
       "type": "",
-      "depends_on": []
+      "depends_on": [],
+      "propertyGroup": {
+        "Nullable": "disable"
+      },
+      "packageReferences": {}
     },
     {
       "Name": "TypeDTK",
       "type": "dev",
       "depends_on": [
         "TypeOTK"
-      ]
+      ],
+      "propertyGroup": {
+        "Nullable": "disable"
+      },
+      "packageReferences": {}
     },
     {
       "Name": "TypeOTKTest",
@@ -51,6 +60,22 @@
       "depends_on": [
         "TypeOTK",
         "TypeDTK"
+      ],
+      "propertyGroup": {
+        "IsPackable": "false"
+      },
+      "packageReferences": {
+        "coverlet.collector": {
+          "PrivateAssets": "all",
+          "IncludeAssets": "runtime; build; native; contentfiles; analyzers; buildtransitive"
+        },
+        "xunit.runner.visualstudio": {
+          "PrivateAssets": "all",
+          "IncludeAssets": "runtime; build; native; contentfiles; analyzers; buildtransitive"
+        }
+      },
+      "usingStatements": [
+        "Xunit"
       ]
     }
   ]
