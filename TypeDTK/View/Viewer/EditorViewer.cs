@@ -16,6 +16,7 @@ using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
 using TypeOEngine.Typedeaf.Core.Entities;
 using TypeOEngine.Typedeaf.Core.Entities.Drawables;
+using TypeOEngine.Typedeaf.Core.Entities.Interfaces;
 using TypeOEngine.Typedeaf.Desktop.Engine.Hardwares.Interfaces;
 using TypeOEngine.Typedeaf.TK.Engine.Graphics;
 using Module = TypeOEngine.Typedeaf.Core.Engine.Module;
@@ -285,12 +286,13 @@ namespace TypeDTK.View.Viewer
             if (obj is Entity entity)
             {
                 entity.Remove();
-                (entity.Parent?.Entities ?? Game.Scenes.CurrentScene.Entities).ProcessRemovals();
+                if(entity.Parent is IHasEntities parentWithEntities)
+                    parentWithEntities.Entities.ProcessRemovals();
             }
             else if (obj is Drawable drawable)
             {
-                if (drawable.Parent != null)
-                    drawable.Parent.Drawables.Destroy(drawable);
+                if(drawable.Parent is IHasEntities parentWithEntities)
+                    parentWithEntities.Drawables.Destroy(drawable);
                 else
                     Game.Scenes.CurrentScene.Drawables.Destroy(drawable);
             }
