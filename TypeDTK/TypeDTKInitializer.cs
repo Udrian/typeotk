@@ -38,8 +38,10 @@ public class TypeDTKInitializer : TypeDModuleInitializer
             "Texture");
 
         // Icons
-        // The editor copies the module's dev externals (Assets/Icons) into the project when the module loads
-        Resources.Get<IIconModel>().AddDefaultIconsPath(Path.Combine(project.Location, "Assets", "Icons"));
+        // The editor copies the module's dev externals (Assets/Icons) into the project when the module loads;
+        // without a project (e.g. in tests) there is no icon folder to register
+        if (!string.IsNullOrEmpty(project?.Location))
+            Resources.Get<IIconModel>().AddDefaultIconsPath(Path.Combine(project.Location, "Assets", "Icons"));
 
         // Viewers
         PanelModel.AddViewer<TKViewer>();
