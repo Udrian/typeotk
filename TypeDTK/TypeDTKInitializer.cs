@@ -38,9 +38,8 @@ public class TypeDTKInitializer : TypeDModuleInitializer
             "Texture");
 
         // Icons
-        var assemblyFolder = Path.GetDirectoryName(typeof(TypeDTKInitializer).Assembly.Location);
-        if (!string.IsNullOrEmpty(assemblyFolder))
-            Resources.Get<IIconModel>().AddDefaultIconsPath(Path.Combine(assemblyFolder, "Assets", "Icons"));
+        // The editor copies the module's dev externals (Assets/Icons) into the project when the module loads
+        Resources.Get<IIconModel>().AddDefaultIconsPath(Path.Combine(project.Location, "Assets", "Icons"));
 
         // Viewers
         PanelModel.AddViewer<TKViewer>();
