@@ -13,6 +13,7 @@ using TypeD.Models.Interfaces;
 using TypeD.View.Viewer;
 using TypeD.ViewModel;
 using TypeDCore.Models.Data.Hooks;
+using TypeDCore.Models.Interfaces;
 using TypeD.Helpers;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Desktop;
@@ -64,6 +65,8 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private EditorViewer Viewer { get; set; }
     private bool GameCrashed { get; set; }
     private ICrashModel CrashModel { get; } = ViewModelBase.ResourceModel?.Get<ICrashModel>();
+    private IEditorToolModel _editorToolModel;
+    private IEditorToolModel EditorToolModel => _editorToolModel ??= ViewModelBase.ResourceModel?.Get<IEditorToolModel>();
 
     /// <summary>Initializes a new instance of the <see cref="TKViewer"/> class.</summary>
     public TKViewer()
@@ -484,6 +487,10 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         if (!IsEffectivelyVisible)
             return;
+
+        // The game side reads the multi-select modifier from the tool model, since key state can't reach the fake mouse
+        if (EditorToolModel != null)
+            EditorToolModel.MultiSelectModifierDown = e.KeyModifiers.HasFlag(KeyModifiers.Control);
 
         var properties = e.GetCurrentPoint(this).Properties;
         var position = e.GetPosition(this);
