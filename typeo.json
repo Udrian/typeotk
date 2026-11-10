@@ -1,6 +1,6 @@
 {
   "name": "TypeOTK",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "externals": [
     "Shaders/tshader.frag",
     "Shaders/tshader.vert",
@@ -10,9 +10,9 @@
     "Mock/Resources/**;test"
   ],
   "dependencies": [
-    "Udrian@TypeOCore-0.1.0.dev",
-    "Udrian@TypeD-0.1.0.dev;dev",
-    "Udrian@TypeODesktop-0.1.0.dev;dev",
+    "Udrian@TypeOCore-1.0.0",
+    "Udrian@TypeD-1.0.0;dev",
+    "Udrian@TypeODesktop-1.0.0;dev",
     "OpenTK-4.9.4;nuget",
     "StbImageSharp-2.30.16;nuget",
     "StbImageWriteSharp-1.16.7;nuget",
