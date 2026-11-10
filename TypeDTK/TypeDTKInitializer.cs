@@ -51,5 +51,8 @@ public class TypeDTKInitializer : TypeDModuleInitializer
     public override void Uninitializer()
     {
         ContentProvider.RemoveSupportedContentType<Texture2dContent>("png");
+
+        // Viewers
+        PanelModel.RemoveViewer<TKViewer>();
     }
 }
