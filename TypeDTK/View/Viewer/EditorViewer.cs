@@ -41,7 +41,11 @@ namespace TypeDTK.View.Viewer
             this.Project = project;
             HookModel = ViewModelBase.ResourceModel.Get<IHookModel>();
 
-            EditorTypeO = (TypeO)TypeO.Create<EditorGame>("Drawable Viewer");
+            // A fresh run of the project starts with an empty game log
+            ViewModelBase.ResourceModel.Get<IGameLogModel>()?.Clear();
+
+            EditorTypeO = (TypeO)TypeO.Create<EditorGame>("Drawable Viewer")
+                .SetLogger<EditorGameLogger>(new DefaultLoggerOption() { LogLevel = LogLevel.Debug });
             Game = (EditorGame)EditorTypeO.Context.Game;
             Game.RunSynchronously = false;
 
