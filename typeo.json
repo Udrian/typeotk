@@ -1,6 +1,6 @@
 {
   "name": "TypeOTK",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "externals": [
     "Shaders/tshader.frag",
     "Shaders/tshader.vert",

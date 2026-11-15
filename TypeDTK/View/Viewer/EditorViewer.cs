@@ -1,8 +1,4 @@
-using Avalonia.Platform;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using TypeD.Helpers;
 using TypeD.Models.Data;
 using TypeD.Models.Data.Hooks;
@@ -151,36 +147,22 @@ namespace TypeDTK.View.Viewer
 
         public void AddComponent(Project project, Component component)
         {
-            InternalAddComponent(project, component);
+            var addedTypeOObject = InternalAddComponent(project, component);
 
-            int i = 0;
-            var components = component.Children.Flatten(c => c.Children).ToList();
-            var objects = EditorTypeO.Context.ListAllTypeOObjects();
-            objects.ForEach(e =>
+            component.ID = addedTypeOObject.ID;
+            if (component.FullName != addedTypeOObject.GetType().FullName)
+                throw new Exception($"Component type '{component.FullName}' does not match the type of the created object '{addedTypeOObject.GetType().FullName}'.");
+            HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = addedTypeOObject, Component = component });
+
+            var childComponents = component.Children.Flatten(c => c.Children).ToList();
+            foreach (var childComponent in childComponents)
             {
-                if (e is Drawable || e is Entity || (e is Scene && !(e is EditorScene)))
-                {
-                    if (i == 0)
-                    {
-                        component.ID = e.ID;
-                        if(component.FullName != e.GetType().FullName)
-                            throw new Exception($"Component type '{component.FullName}' does not match the type of the created object '{e.GetType().FullName}'.");
-                        HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = e, Component = component });
-                    }
-                    else
-                    {
-                        if(components.Count <= i - 1)
-                        {
-                            throw new Exception("The number of components in the hierarchy does not match the number of created objects in the view.");
-                        }
-                        components[i - 1].ID = e.ID;
-                        if (components[i - 1].FullName != e.GetType().FullName)
-                            throw new Exception($"Component type '{components[i - 1].FullName}' does not match the type of the created object '{e.GetType().FullName}'.");
-                        HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = e, Component = components[i - 1] });
-                    }
-                    i++;
-                }
-            });
+                var childTypeOObject = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>($"{Game.Scenes.CurrentScene.ID}/{childComponent.FullParentPath}{childComponent.ID}");
+                
+                if (childComponent.FullName != childTypeOObject.GetType().FullName)
+                    throw new Exception($"Component type '{childComponent.FullName}' does not match the type of the created object '{childTypeOObject.GetType().FullName}'.");
+                HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = childTypeOObject, Component = childComponent });
+            }
         }
 
         private void SyncContentBasePath()
