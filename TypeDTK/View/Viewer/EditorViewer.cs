@@ -157,8 +157,14 @@ namespace TypeDTK.View.Viewer
             var childComponents = component.Children.Flatten(c => c.Children).ToList();
             foreach (var childComponent in childComponents)
             {
-                var childTypeOObject = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>($"{Game.Scenes.CurrentScene.ID}/{childComponent.FullParentPath}{childComponent.ID}");
-                
+                var id = $"{childComponent.FullParentPath}{childComponent.ID}";
+                if(!id.StartsWith(Game.Scenes.CurrentScene.ID))
+                    id = $"{Game.Scenes.CurrentScene.ID}/{id}";
+
+                var childTypeOObject = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id);
+                if(childTypeOObject == null)
+                    throw new Exception($"Could not find the TypeO object for component '{childComponent.FullParentPath}{childComponent.ID}'");
+
                 if (childComponent.FullName != childTypeOObject.GetType().FullName)
                     throw new Exception($"Component type '{childComponent.FullName}' does not match the type of the created object '{childTypeOObject.GetType().FullName}'.");
                 HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = childTypeOObject, Component = childComponent });
