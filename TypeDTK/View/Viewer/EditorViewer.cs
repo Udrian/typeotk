@@ -58,7 +58,10 @@ namespace TypeDTK.View.Viewer
 
             AddDeferredHook<PropertyChangedHook>((hook) =>
             {
-                TypeOObject obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(hook.Component.FullParentPath + hook.Component.ID);
+                var id = $"{hook.Component.FullParentPath}{hook.Component.ID}";
+                if (!id.StartsWith(Game.Scenes.CurrentScene.ID))
+                    id = $"{Game.Scenes.CurrentScene.ID}/{id}";
+                TypeOObject obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id);
                 if (obj == null) // The view may have been cleared or reloaded before this deferred change runs
                     return;
                 var objType = obj.GetType();
@@ -206,12 +209,19 @@ namespace TypeDTK.View.Viewer
             SyncContentBasePath();
             var typeInfo = ResolveType(project, component.FullName);
             if (typeInfo == null) return null;
-            if (parent != null && EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(parent.FullParentPath + parent.ID) is Entity parentEntity)
+
+            if (parent != null)
             {
-                if (component.IsBasedOn(typeof(Drawable)))
-                    return parentEntity.Drawables.Create(typeInfo, component.ID);
-                if (component.IsBasedOn(typeof(Entity)))
-                    return parentEntity.Entities.Create(typeInfo, component.ID);
+                var id = $"{parent.FullParentPath}{parent.ID}";
+                if (!id.StartsWith(Game.Scenes.CurrentScene.ID))
+                    id = $"{Game.Scenes.CurrentScene.ID}/{id}";
+                if (EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id) is Entity parentEntity)
+                {
+                    if (component.IsBasedOn(typeof(Drawable)))
+                        return parentEntity.Drawables.Create(typeInfo, component.ID);
+                    if (component.IsBasedOn(typeof(Entity)))
+                        return parentEntity.Entities.Create(typeInfo, component.ID);
+                }
             }
             if (component.IsBasedOn(typeof(Drawable)))
             {
@@ -336,7 +346,11 @@ namespace TypeDTK.View.Viewer
 
         private void ProcessContentLoad(ContentLoadRequestedHook request)
         {
-            var obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(request.Component.FullParentPath + request.Component.ID);
+            var id = $"{request.Component.FullParentPath}{request.Component.ID}";
+            if (!id.StartsWith(Game.Scenes.CurrentScene.ID))
+                id = $"{Game.Scenes.CurrentScene.ID}/{id}";
+
+            var obj = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id);
             var property = obj?.GetType().GetProperty(request.Property.Name);
             if (property == null)
                 return;
