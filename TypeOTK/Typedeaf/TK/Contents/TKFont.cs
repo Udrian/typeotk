@@ -1,5 +1,6 @@
 ﻿using FontStashSharp;
 using OpenTK.Graphics.OpenGL4;
+using System.Numerics;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
 using TypeOEngine.Typedeaf.Core.Engine.Contents;
@@ -29,8 +30,11 @@ namespace TypeOEngine.Typedeaf.TK
                 get => base.FontSize;
                 set
                 {
-                    base.FontSize = value;
-                    Load(FilePath);
+                    if (base.FontSize != value)
+                    {
+                        base.FontSize = value;
+                        Load(FilePath);
+                    }
                 }
             }
 
@@ -79,12 +83,13 @@ namespace TypeOEngine.Typedeaf.TK
             /// </summary>
             /// <param name="text">Text to draw</param>
             /// <param name="position">Top left position of the text</param>
+            /// <param name="scale">The scaling amount</param>
             /// <param name="color">Color of the text</param>
             /// <param name="flipped">How the text should be flipped</param>
-            public void Draw(string text, Vec2 position, Color color, Flipped flipped = Flipped.None)
+            public void Draw(string text, Vec2 position, Vec2 scale, Color color, Flipped flipped = Flipped.None)
             {
                 Renderer.Begin((float)position.X, (float)position.Y, flipped);
-                SpriteFont.DrawText(Renderer, text, System.Numerics.Vector2.Zero, new FSColor(color.R, color.G, color.B, color.A));
+                SpriteFont.DrawText(Renderer, text, System.Numerics.Vector2.Zero, new FSColor(color.R, color.G, color.B, color.A), scale: new Vector2((float)scale.X, (float)scale.Y));
                 Renderer.End();
 
                 var error = GL.GetError();

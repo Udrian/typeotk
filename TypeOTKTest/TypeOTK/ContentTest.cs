@@ -61,7 +61,7 @@ namespace TypeOTKTest.TypeOTK
             var size100 = tkFont.MeasureString("Test");
             Assert.True(size100.X > size24.X && size100.Y > size24.Y);
 
-            tkFont.Draw("Hello", new Vec2(100, 100), Color.CapeHoney);
+            tkFont.Draw("Hello", new Vec2(100, 100), Vec2.One, Color.CapeHoney);
         }
 
         [Fact]

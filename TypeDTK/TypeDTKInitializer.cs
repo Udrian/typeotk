@@ -37,6 +37,13 @@ public class TypeDTKInitializer : TypeDModuleInitializer
             "TypeOEngine.Typedeaf.TypeOBasic2d.Entities.Drawables.DrawableTexture",
             "Texture");
 
+
+        ContentProvider.AddSupportedContentType<FontContent, Font, TKFont>(
+            "ttf",
+            "font.png",
+            "TypeOEngine.Typedeaf.TypeOBasic2d.Entities.Drawables.DrawableFont",
+            "Font");
+
         // Icons
         // The editor copies the module's dev externals (Assets/Icons) into the project when the module loads;
         // without a project (e.g. in tests) there is no icon folder to register
@@ -51,6 +58,7 @@ public class TypeDTKInitializer : TypeDModuleInitializer
     public override void Uninitializer()
     {
         ContentProvider.RemoveSupportedContentType<Texture2dContent>("png");
+        ContentProvider.RemoveSupportedContentType<FontContent>("ttf");
 
         // Viewers
         PanelModel.RemoveViewer<TKViewer>();
