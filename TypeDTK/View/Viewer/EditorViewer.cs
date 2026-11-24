@@ -151,6 +151,8 @@ namespace TypeDTK.View.Viewer
         public void AddComponent(Project project, Component component)
         {
             var addedTypeOObject = InternalAddComponent(project, component);
+            if (addedTypeOObject == null)
+                return;
 
             component.ID = addedTypeOObject.ID;
             if (component.FullName != addedTypeOObject.GetType().FullName)
@@ -241,6 +243,7 @@ namespace TypeDTK.View.Viewer
 
         private void AddComponentToView(Project project, Component child, Component parent)
         {
+            if (parent.IsBasedOn(typeof(Game))) return;
             var addedObject = InternalAddComponent(project, child, parent);
             if (addedObject == null)
                 return;
