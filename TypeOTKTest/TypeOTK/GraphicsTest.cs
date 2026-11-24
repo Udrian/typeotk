@@ -1,4 +1,5 @@
 using OpenTK.Mathematics;
+using OpenTK.Graphics.OpenGL4;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine.Contents.ContentExtensions;
 using TypeOEngine.Typedeaf.TK.Contents;
@@ -122,6 +123,88 @@ public class GraphicsTest
 
             Assert.Equal(Matrix4.CreateOrthographicOffCenter(-1, 319, 240, -1, -1f, 100f), canvas.ProjectionMatrix);
             context.Exit();
+        }).Start();
+    }
+
+    [Fact]
+    public void Canvas_EnsureStencilBuffer_AddsAttachmentToFramebuffer()
+    {
+        Utility.DrawTest((context) =>
+        {
+            var canvas = (TKCanvas)context.Game.Scenes.Canvas;
+            var viewport = new int[4];
+            GL.GetInteger(GetPName.Viewport, viewport);
+            var framebuffer = GL.GenFramebuffer();
+            var texture = GL.GenTexture();
+            var depthRenderbuffer = GL.GenRenderbuffer();
+            GL.GetInteger(GetPName.RenderbufferBinding, out var previousRenderbuffer);
+
+            try
+            {
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+                GL.BindTexture(TextureTarget.Texture2D, texture);
+                GL.TexImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    PixelInternalFormat.Rgba,
+                    16,
+                    16,
+                    0,
+                    PixelFormat.Rgba,
+                    PixelType.UnsignedByte,
+                    IntPtr.Zero);
+                GL.FramebufferTexture2D(
+                    FramebufferTarget.Framebuffer,
+                    FramebufferAttachment.ColorAttachment0,
+                    TextureTarget.Texture2D,
+                    texture,
+                    0);
+                GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthRenderbuffer);
+                GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, 16, 16);
+                GL.FramebufferRenderbuffer(
+                    FramebufferTarget.Framebuffer,
+                    FramebufferAttachment.DepthAttachment,
+                    RenderbufferTarget.Renderbuffer,
+                    depthRenderbuffer);
+                GL.Viewport(0, 0, 16, 16);
+                GL.GetInteger((GetPName)0x0D57, out var initialStencilBits);
+                Assert.Equal(0, initialStencilBits);
+
+                Assert.True(canvas.EnsureStencilBuffer());
+
+                GL.GetFramebufferAttachmentParameter(
+                    FramebufferTarget.Framebuffer,
+                    FramebufferAttachment.StencilAttachment,
+                    FramebufferParameterName.FramebufferAttachmentStencilSize,
+                    out var stencilBits);
+                Assert.True(stencilBits > 0);
+
+                canvas.ReleaseStencilBuffer();
+
+                GL.GetFramebufferAttachmentParameter(
+                    FramebufferTarget.Framebuffer,
+                    FramebufferAttachment.StencilAttachment,
+                    FramebufferParameterName.FramebufferAttachmentObjectType,
+                    out var stencilAttachmentType);
+                Assert.Equal((int)FramebufferAttachmentObjectType.None, stencilAttachmentType);
+                GL.GetFramebufferAttachmentParameter(
+                    FramebufferTarget.Framebuffer,
+                    FramebufferAttachment.DepthAttachment,
+                    FramebufferParameterName.FramebufferAttachmentObjectName,
+                    out var restoredDepthRenderbuffer);
+                Assert.Equal(depthRenderbuffer, restoredDepthRenderbuffer);
+                Assert.Equal(FramebufferErrorCode.FramebufferComplete, GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer));
+            }
+            finally
+            {
+                GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, previousRenderbuffer);
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.Viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+                GL.DeleteRenderbuffer(depthRenderbuffer);
+                GL.DeleteFramebuffer(framebuffer);
+                GL.DeleteTexture(texture);
+                context.Exit();
+            }
         }).Start();
     }
 

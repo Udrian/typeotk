@@ -48,6 +48,8 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
         /// <returns>The newly created window</returns>
         public TKGameWindow CreateTKGameWindow(NativeWindowSettings nativeWindowSettings)
         {
+            if (nativeWindowSettings.StencilBits.GetValueOrDefault() < 8)
+                nativeWindowSettings.StencilBits = 8;
             var game = new TKGameWindow(nativeWindowSettings);
             TKGames.Add(game);
 
