@@ -1,5 +1,6 @@
 ﻿using FontStashSharp;
 using OpenTK.Graphics.OpenGL4;
+using Matrix4 = OpenTK.Mathematics.Matrix4;
 using System.Numerics;
 using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Engine;
@@ -101,6 +102,22 @@ namespace TypeOEngine.Typedeaf.TK
                     (float)(position.Y - rotationOrigin.Y),
                     clipRect
                 );
+                SpriteFont.DrawText(Renderer, text, System.Numerics.Vector2.Zero, new FSColor(color.R, color.G, color.B, color.A), scale: new Vector2((float)scale.X, (float)scale.Y));
+                Renderer.End();
+
+                var error = GL.GetError();
+                if (error != ErrorCode.NoError && error != ErrorCode.InvalidEnum)
+                {
+                    Logger.Log(LogLevel.Error, $"Error drawing Font '{FilePath}' with the error: '{error.ToString()}'");
+                }
+            }
+
+            /// <summary>
+            /// Draws text with a local-to-world matrix and canvas camera transform.
+            /// </summary>
+            public void DrawTransformed(string text, Vec2 scale, Color color, Flipped flipped, Matrix4 modelMatrix, Vec2 worldTranslation, double worldScale, float viewportHeight, Rectangle? clipRect = null)
+            {
+                Renderer.Begin(modelMatrix, worldTranslation, worldScale, viewportHeight, flipped, clipRect);
                 SpriteFont.DrawText(Renderer, text, System.Numerics.Vector2.Zero, new FSColor(color.R, color.G, color.B, color.A), scale: new Vector2((float)scale.X, (float)scale.Y));
                 Renderer.End();
 

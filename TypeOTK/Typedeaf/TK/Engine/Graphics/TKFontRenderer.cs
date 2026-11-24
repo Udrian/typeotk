@@ -57,6 +57,11 @@ void main(void)
             private float rotationSin;
             private Rectangle? clipRectangle;
             private Flipped currentFlipped;
+            private bool useWorldTransform;
+            private Matrix4 worldModelMatrix;
+            private Vec2 worldTranslation;
+            private float worldScale;
+            private float viewportHeight;
 
             public ITexture2DManager TextureManager => this;
 
@@ -83,6 +88,7 @@ void main(void)
                 rotationSin = 0;
                 clipRectangle = null;
                 currentFlipped = flipped;
+                useWorldTransform = false;
 
                 var viewport = new int[4];
                 GL.GetInteger(GetPName.Viewport, viewport);
@@ -93,6 +99,17 @@ void main(void)
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.BindVertexArray(vao);
+            }
+
+            public void Begin(Matrix4 modelMatrix, Vec2 translation, double scale, float height, Flipped flipped, Rectangle? clipRect)
+            {
+                Begin(0, 0, flipped);
+                useWorldTransform = true;
+                worldModelMatrix = modelMatrix;
+                worldTranslation = translation;
+                worldScale = (float)scale;
+                viewportHeight = height;
+                clipRectangle = clipRect;
             }
 
             public void Begin(float x, float y, Flipped flipped, double rotation, float originX, float originY, Rectangle? clipRect)
@@ -254,14 +271,26 @@ void main(void)
             private void WriteVertex(int index, ref VertexPositionColorTexture vertex)
             {
                 var i = index * FloatsPerVertex;
-                var x = offsetX + vertex.Position.X;
-                var y = offsetY - vertex.Position.Y;
-                if (rotationSin != 0)
+                float x;
+                float y;
+                if (useWorldTransform)
                 {
-                    var deltaX = x - rotationOriginX;
-                    var deltaY = y - rotationOriginY;
-                    x = rotationOriginX + deltaX * rotationCos + deltaY * rotationSin;
-                    y = rotationOriginY - deltaX * rotationSin + deltaY * rotationCos;
+                    var worldX = vertex.Position.X * worldModelMatrix.M11 + vertex.Position.Y * worldModelMatrix.M21 + worldModelMatrix.M41;
+                    var worldY = vertex.Position.X * worldModelMatrix.M12 + vertex.Position.Y * worldModelMatrix.M22 + worldModelMatrix.M42;
+                    x = (worldX - (float)worldTranslation.X) * worldScale;
+                    y = viewportHeight - (worldY - (float)worldTranslation.Y) * worldScale;
+                }
+                else
+                {
+                    x = offsetX + vertex.Position.X;
+                    y = offsetY - vertex.Position.Y;
+                    if (rotationSin != 0)
+                    {
+                        var deltaX = x - rotationOriginX;
+                        var deltaY = y - rotationOriginY;
+                        x = rotationOriginX + deltaX * rotationCos + deltaY * rotationSin;
+                        y = rotationOriginY - deltaX * rotationSin + deltaY * rotationCos;
+                    }
                 }
 
                 vertexData[i + 0] = x;
