@@ -1,8 +1,11 @@
 using FontStashSharp.Interfaces;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using TypeOEngine.Typedeaf.Core.Common;
 using TypeOEngine.Typedeaf.Core.Entities;
 using TypeOTK.Typedeaf.TK.Engine.Graphics;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
 
 namespace TypeOEngine.Typedeaf.TK
 {
@@ -48,6 +51,11 @@ void main(void)
             private bool resourcesCreated;
             private float offsetX;
             private float offsetY;
+            private float rotationOriginX;
+            private float rotationOriginY;
+            private float rotationCos = 1;
+            private float rotationSin;
+            private Rectangle? clipRectangle;
             private Flipped currentFlipped;
 
             public ITexture2DManager TextureManager => this;
@@ -69,6 +77,11 @@ void main(void)
 
                 offsetX = x;
                 offsetY = y;
+                rotationOriginX = x;
+                rotationOriginY = y;
+                rotationCos = 1;
+                rotationSin = 0;
+                clipRectangle = null;
                 currentFlipped = flipped;
 
                 var viewport = new int[4];
@@ -80,6 +93,18 @@ void main(void)
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 GL.BindVertexArray(vao);
+            }
+
+            public void Begin(float x, float y, Flipped flipped, double rotation, float originX, float originY, Rectangle? clipRect)
+            {
+                Begin(x, y, flipped);
+
+                var radians = rotation * Math.PI / 180.0;
+                rotationOriginX = originX;
+                rotationOriginY = originY;
+                rotationCos = (float)Math.Cos(radians);
+                rotationSin = (float)Math.Sin(radians);
+                clipRectangle = clipRect;
             }
 
             public void End()
@@ -153,6 +178,9 @@ void main(void)
                     }
                 }
 
+                if (clipRectangle.HasValue && !ClipQuad(ref topLeft, ref topRight, ref bottomLeft, ref bottomRight, clipRectangle.Value))
+                    return;
+
                 // Triangle strip order: top-left, top-right, bottom-left, bottom-right
                 WriteVertex(0, ref topLeft);
                 WriteVertex(1, ref topRight);
@@ -165,11 +193,79 @@ void main(void)
                 GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
             }
 
+            private static bool ClipQuad(
+                ref VertexPositionColorTexture topLeft,
+                ref VertexPositionColorTexture topRight,
+                ref VertexPositionColorTexture bottomLeft,
+                ref VertexPositionColorTexture bottomRight,
+                Rectangle clip)
+            {
+                var quadLeft = Math.Min(Math.Min(topLeft.Position.X, bottomLeft.Position.X), Math.Min(topRight.Position.X, bottomRight.Position.X));
+                var quadTop = Math.Min(Math.Min(topLeft.Position.Y, topRight.Position.Y), Math.Min(bottomLeft.Position.Y, bottomRight.Position.Y));
+                var quadRight = Math.Max(Math.Max(topLeft.Position.X, bottomLeft.Position.X), Math.Max(topRight.Position.X, bottomRight.Position.X));
+                var quadBottom = Math.Max(Math.Max(topLeft.Position.Y, topRight.Position.Y), Math.Max(bottomLeft.Position.Y, bottomRight.Position.Y));
+
+                var clipLeft = Math.Min(clip.Pos.X, clip.Pos.X + clip.Size.X);
+                var clipTop = Math.Min(clip.Pos.Y, clip.Pos.Y + clip.Size.Y);
+                var clipRight = Math.Max(clip.Pos.X, clip.Pos.X + clip.Size.X);
+                var clipBottom = Math.Max(clip.Pos.Y, clip.Pos.Y + clip.Size.Y);
+
+                var left = (float)Math.Max(quadLeft, clipLeft);
+                var top = (float)Math.Max(quadTop, clipTop);
+                var right = (float)Math.Min(quadRight, clipRight);
+                var bottom = (float)Math.Min(quadBottom, clipBottom);
+                if (right <= left || bottom <= top || quadRight <= quadLeft || quadBottom <= quadTop)
+                    return false;
+
+                var leftRatio = (left - quadLeft) / (quadRight - quadLeft);
+                var rightRatio = (right - quadLeft) / (quadRight - quadLeft);
+                var topRatio = (top - quadTop) / (quadBottom - quadTop);
+                var bottomRatio = (bottom - quadTop) / (quadBottom - quadTop);
+
+                var originalTopLeft = topLeft.TextureCoordinate;
+                var originalTopRight = topRight.TextureCoordinate;
+                var originalBottomLeft = bottomLeft.TextureCoordinate;
+                var originalBottomRight = bottomRight.TextureCoordinate;
+
+                SetClippedVertex(ref topLeft, left, top, originalTopLeft, originalTopRight, originalBottomLeft, originalBottomRight, leftRatio, topRatio);
+                SetClippedVertex(ref topRight, right, top, originalTopLeft, originalTopRight, originalBottomLeft, originalBottomRight, rightRatio, topRatio);
+                SetClippedVertex(ref bottomLeft, left, bottom, originalTopLeft, originalTopRight, originalBottomLeft, originalBottomRight, leftRatio, bottomRatio);
+                SetClippedVertex(ref bottomRight, right, bottom, originalTopLeft, originalTopRight, originalBottomLeft, originalBottomRight, rightRatio, bottomRatio);
+                return true;
+            }
+
+            private static void SetClippedVertex(
+                ref VertexPositionColorTexture vertex,
+                float x,
+                float y,
+                Vector2 topLeft,
+                Vector2 topRight,
+                Vector2 bottomLeft,
+                Vector2 bottomRight,
+                float xRatio,
+                float yRatio)
+            {
+                var top = Vector2.Lerp(topLeft, topRight, xRatio);
+                var bottom = Vector2.Lerp(bottomLeft, bottomRight, xRatio);
+                vertex.Position = new Vector3(x, y, vertex.Position.Z);
+                vertex.TextureCoordinate = Vector2.Lerp(top, bottom, yRatio);
+            }
+
             private void WriteVertex(int index, ref VertexPositionColorTexture vertex)
             {
                 var i = index * FloatsPerVertex;
-                vertexData[i + 0] = offsetX + vertex.Position.X;
-                vertexData[i + 1] = offsetY - vertex.Position.Y;
+                var x = offsetX + vertex.Position.X;
+                var y = offsetY - vertex.Position.Y;
+                if (rotationSin != 0)
+                {
+                    var deltaX = x - rotationOriginX;
+                    var deltaY = y - rotationOriginY;
+                    x = rotationOriginX + deltaX * rotationCos + deltaY * rotationSin;
+                    y = rotationOriginY - deltaX * rotationSin + deltaY * rotationCos;
+                }
+
+                vertexData[i + 0] = x;
+                vertexData[i + 1] = y;
                 vertexData[i + 2] = vertex.TextureCoordinate.X;
                 vertexData[i + 3] = vertex.TextureCoordinate.Y;
                 vertexData[i + 4] = vertex.Color.R / 255f;

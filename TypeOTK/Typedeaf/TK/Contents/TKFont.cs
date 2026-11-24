@@ -86,9 +86,21 @@ namespace TypeOEngine.Typedeaf.TK
             /// <param name="scale">The scaling amount</param>
             /// <param name="color">Color of the text</param>
             /// <param name="flipped">How the text should be flipped</param>
-            public void Draw(string text, Vec2 position, Vec2 scale, Color color, Flipped flipped = Flipped.None)
+            /// <param name="rotation">Rotation angle in degrees.</param>
+            /// <param name="origin">Local text offset used as the rotation pivot.</param>
+            /// <param name="clipRect">Optional local rectangle to clip the text to.</param>
+            public void Draw(string text, Vec2 position, Vec2 scale, Color color, Flipped flipped = Flipped.None, double rotation = 0, Vec2? origin = null, Rectangle? clipRect = null)
             {
-                Renderer.Begin((float)position.X, (float)position.Y, flipped);
+                var rotationOrigin = origin ?? Vec2.Zero;
+                Renderer.Begin(
+                    (float)position.X,
+                    (float)position.Y,
+                    flipped,
+                    rotation,
+                    (float)(position.X + rotationOrigin.X),
+                    (float)(position.Y - rotationOrigin.Y),
+                    clipRect
+                );
                 SpriteFont.DrawText(Renderer, text, System.Numerics.Vector2.Zero, new FSColor(color.R, color.G, color.B, color.A), scale: new Vector2((float)scale.X, (float)scale.Y));
                 Renderer.End();
 
