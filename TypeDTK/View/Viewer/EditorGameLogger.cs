@@ -6,20 +6,47 @@ using TypeOEngine.Typedeaf.Core.Engine;
 namespace TypeDTK.View.Viewer
 {
     /// <summary>
-    /// Logger attached to the game hosted inside the editor viewer. Works the same as <see cref="DefaultLogger"/>,
-    /// but also keeps every message in the editor's game log so it can be shown in the Output panel and in crash reports.
+    /// Logger attached to the game hosted inside the editor viewer. Messages are sent to the game log in background batches.
     /// </summary>
     internal class EditorGameLogger : DefaultLogger
     {
         private IGameLogModel GameLogModel { get; } = ViewModelBase.ResourceModel?.Get<IGameLogModel>();
 
-        /// <inheritdoc/>
-        public override void Log(LogLevel level, string log)
+        protected override bool ShouldQueueFilteredMessage(LogLevel level)
         {
-            // The game log keeps everything; the display filters on level instead
-            if (level != LogLevel.None)
-                GameLogModel?.Add((GameLogLevel)(int)level, log);
-            base.Log(level, log);
+            return level != LogLevel.None;
+        }
+
+        protected override void ProcessLogBatch(IReadOnlyList<LogEntry> batch)
+        {
+            if (GameLogModel == null)
+                return;
+
+            var entries = new List<GameLogEntry>(batch.Count);
+            foreach (var logEntry in batch)
+            {
+                if (logEntry.Level == LogLevel.None)
+                    continue;
+
+                entries.Add(new GameLogEntry
+                {
+                    Time = DateTime.Now,
+                    Level = (GameLogLevel)(int)logEntry.Level,
+                    Message = logEntry.Message ?? string.Empty
+                });
+            }
+
+            if (entries.Count == 0)
+                return;
+
+            if (GameLogModel is IBatchedGameLogModel batchedGameLogModel)
+            {
+                batchedGameLogModel.AddRange(entries);
+                return;
+            }
+
+            foreach (var entry in entries)
+                GameLogModel.Add(entry.Level, entry.Message);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace TypeOEngine.Typedeaf.TK.Engine.Services
     /// <summary>
     /// Service that holds a instance to the OpenTK Game window implementation
     /// </summary>
-    public class TKGameService : Service, IUpdatable
+    public class TKGameService : Service, IMainThreadUpdatable
     {
         /// <summary>
         /// List of currently open Game Windows

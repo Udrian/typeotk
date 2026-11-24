@@ -78,6 +78,7 @@ namespace TypeOEngine.Typedeaf.TK
 
                 Shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
                 TextureShader = new Shader("Shaders/tshader.vert", "Shaders/tshader.frag");
+                Shader.Set("useVertexColor", 0);
                 
                 ViewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, 0.0f);
                 UpdateProjection();
@@ -107,6 +108,9 @@ namespace TypeOEngine.Typedeaf.TK
             /// <remarks>Pair a successful call with <see cref="ReleaseStencilBuffer"/>.</remarks>
             public bool EnsureStencilBuffer()
             {
+                if (CanvasDrawCommandQueue.IsWorkerThread)
+                    throw new InvalidOperationException("Stencil buffers must be accessed on the graphics thread.");
+
                 GL.GetInteger(GetPName.FramebufferBinding, out var framebuffer);
                 if (framebuffer == 0)
                     return false;
@@ -248,6 +252,9 @@ namespace TypeOEngine.Typedeaf.TK
             /// </summary>
             public void ReleaseStencilBuffer()
             {
+                if (CanvasDrawCommandQueue.IsWorkerThread)
+                    throw new InvalidOperationException("Stencil buffers must be accessed on the graphics thread.");
+
                 GL.GetInteger(GetPName.FramebufferBinding, out var framebuffer);
                 if (!StencilBuffers.TryGetValue(framebuffer, out var stencilBuffer)
                     || stencilBuffer.LeaseCount == 0)
@@ -401,6 +408,10 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void Clear(Color clearColor)
             {
+                if (CanvasDrawCommandQueue.TryEnqueue(() => Clear(clearColor)))
+                    return;
+
+                CanvasDrawCommandQueue.FlushPendingBatch();
                 GL.ClearColor(clearColor.Rf, clearColor.Gf, clearColor.Bf, clearColor.Af);
                 GL.Clear(ClearBufferMask.ColorBufferBit);
 
@@ -410,6 +421,10 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void Present()
             {
+                if (CanvasDrawCommandQueue.TryEnqueue(Present))
+                    return;
+
+                CanvasDrawCommandQueue.FlushPendingBatch();
                 GL.Finish();
                 TKGame?.Context.SwapBuffers();
 
@@ -419,6 +434,10 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void PreDraw()
             {
+                if (CanvasDrawCommandQueue.TryEnqueue(PreDraw))
+                    return;
+
+                CanvasDrawCommandQueue.FlushPendingBatch();
                 ViewMatrix = Matrix4.CreateTranslation(-(float)WorldTranslation.X, -(float)WorldTranslation.Y, -(float)WorldTranslation.Z);
                 if (WorldScale != 1)
                     ViewMatrix *= Matrix4.CreateScale((float)WorldScale, (float)WorldScale, 1);
@@ -436,11 +455,18 @@ namespace TypeOEngine.Typedeaf.TK
             /// <inheritdoc/>
             public override void PostDraw()
             {
+                if (CanvasDrawCommandQueue.TryEnqueue(PostDraw))
+                    return;
+
+                CanvasDrawCommandQueue.FlushPendingBatch();
             }
 
             /// <inheritdoc/>
             public override Texture Screenshot(Rectangle screenRect)
             {
+                if (CanvasDrawCommandQueue.IsWorkerThread)
+                    throw new InvalidOperationException("Screenshots cannot be captured from an engine worker thread.");
+
                 byte[] data = new byte[(int)screenRect.Size.X * (int)screenRect.Size.Y * 4];
                 GL.ReadBuffer(ReadBufferMode.Front);
                 GL.ReadPixels((int)screenRect.Pos.X, (int)screenRect.Pos.Y, (int)screenRect.Size.X, (int)screenRect.Size.Y, PixelFormat.Rgba, PixelType.UnsignedByte, data);
