@@ -59,6 +59,8 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private readonly Stopwatch FrameTimer = new();
     private GlfwMouseButton? PanButton;
     private Point PanLastPosition;
+    private bool MiddlePanPending;
+    private const double MiddlePanThreshold = 4;
     private Component SelectedComponent { get; set; }
     private IHookModel HookModel { get; } = ViewModelBase.ResourceModel?.Get<IHookModel>();
 
@@ -204,6 +206,15 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
+        if (MiddlePanPending && PanButton == null)
+        {
+            var current = e.GetPosition(this);
+            if (Math.Abs(current.X - PanLastPosition.X) + Math.Abs(current.Y - PanLastPosition.Y) > MiddlePanThreshold)
+            {
+                MiddlePanPending = false;
+                PanButton = GlfwMouseButton.Button3;
+            }
+        }
         if (PanButton != null)
         {
             var position = e.GetPosition(this);
@@ -264,8 +275,13 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         if (PanButton == null)
         {
             // Panning takes the button away from the game, so a pan never selects or drags a node
+            // Middle press is shared with the game (removing polygon points), so a pan only starts once the pointer is dragged
             if (properties.IsMiddleButtonPressed)
-                BeginPan(GlfwMouseButton.Button3, e);
+            {
+                MiddlePanPending = true;
+                PanLastPosition = e.GetPosition(this);
+                e.Pointer.Capture(this);
+            }
             else if (properties.IsLeftButtonPressed && HeldKeys.Contains(Key.Space))
                 BeginPan(GlfwMouseButton.Button1, e);
         }
@@ -281,6 +297,12 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (MiddlePanPending && !e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+        {
+            MiddlePanPending = false;
+            if (e.Pointer.Captured == this)
+                e.Pointer.Capture(null);
+        }
         if (PanButton != null && !IsButtonPressed(e.GetCurrentPoint(this).Properties, PanButton.Value))
             EndPan(e.Pointer);
         UpdateMouseState(e);
@@ -290,6 +312,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        MiddlePanPending = false;
         PanButton = null;
     }
 
