@@ -13,6 +13,8 @@ using TypeD.Models.Interfaces;
 using TypeD.View.Viewer;
 using TypeD.ViewModel;
 using TypeDCore.Models.Data.Hooks;
+using TypeDCore.Models.Data;
+using TypeDCore.Models.Data.SettingContexts;
 using TypeDCore.Models.Interfaces;
 using TypeD.Helpers;
 using TypeOEngine.Typedeaf.Core.Common;
@@ -44,6 +46,9 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private Vector2 PreviousMouseScroll;
     private readonly HashSet<GlfwMouseButton> MouseButtonsDown = new();
     private readonly HashSet<GlfwMouseButton> PreviousMouseButtonsDown = new();
+    private readonly HashSet<GlfwMouseButton> SuppressedMouseButtons = new();
+    private ContextMenu OpenContextMenu;
+    private int ContextMenuRequestVersion;
 
     /// <summary>Gets the component currently loaded into the viewer, or <c>null</c>.</summary>
     public Component Component { get; private set; }
@@ -56,6 +61,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private const double WheelZoomStep = 1.15;
     private const double KeyZoomStep = 1.25;
     private readonly HashSet<Key> HeldKeys = new();
+    private readonly HashSet<Key> NudgeKeys = new();
     private readonly Stopwatch FrameTimer = new();
     private GlfwMouseButton? PanButton;
     private Point PanLastPosition;
@@ -69,6 +75,10 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     private ICrashModel CrashModel { get; } = ViewModelBase.ResourceModel?.Get<ICrashModel>();
     private IEditorToolModel _editorToolModel;
     private IEditorToolModel EditorToolModel => _editorToolModel ??= ViewModelBase.ResourceModel?.Get<IEditorToolModel>();
+    private INodeSelectionModel _nodeSelectionModel;
+    private INodeSelectionModel NodeSelectionModel => _nodeSelectionModel ??= ViewModelBase.ResourceModel?.Get<INodeSelectionModel>();
+    private ISettingModel _settingModel;
+    private ISettingModel SettingModel => _settingModel ??= ViewModelBase.ResourceModel?.Get<ISettingModel>();
 
     /// <summary>Initializes a new instance of the <see cref="TKViewer"/> class.</summary>
     public TKViewer()
@@ -224,7 +234,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         UpdateMouseState(e);
     }
 
-    private async void OpenNodeContextMenu()
+    private async void OpenNodeContextMenu(int requestVersion)
     {
         var project = Project;
         var component = Component;
@@ -243,7 +253,7 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         {
             ViewModelBase.ResourceModel.Get<ILogModel>().Log($"Could not read the node clipboard: {exception}");
         }
-        if (Project != project || Component != component)
+        if (requestVersion != ContextMenuRequestVersion || Project != project || Component != component || TopLevel.GetTopLevel(this) == null)
             return;
         var hook = new ViewerComponentContextMenuHook
         {
@@ -255,8 +265,14 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         };
         HookModel?.Shoot<ComponentContextMenuHook>(hook);
         var model = new ViewerMenuViewModel { LoadedProject = Project };
-        foreach (var item in hook.Menu.Items)
-            ViewHelper.InitMenu(menu, item, model);
+        ViewHelper.InitContextMenu(menu, hook.Menu, model);
+        OpenContextMenu?.Close();
+        OpenContextMenu = menu;
+        menu.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(OpenContextMenu, menu))
+                OpenContextMenu = null;
+        };
         menu.Open(this);
     }
 
@@ -269,9 +285,22 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        var requestVersion = ++ContextMenuRequestVersion;
+        var properties = e.GetCurrentPoint(this).Properties;
+        if (OpenContextMenu?.IsOpen == true)
+        {
+            SuppressPressedButton(properties.PointerUpdateKind);
+            OpenContextMenu.Close();
+            UpdateMouseState(e);
+            e.Handled = true;
+            return;
+        }
+
         Focus();
 
-        var properties = e.GetCurrentPoint(this).Properties;
+        // The viewer owns right-click menus; forwarding the press also opens one from the game overlay.
+        if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
+            SuppressedMouseButtons.Add(GlfwMouseButton.Button2);
         if (PanButton == null)
         {
             // Panning takes the button away from the game, so a pan never selects or drags a node
@@ -286,9 +315,9 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
                 BeginPan(GlfwMouseButton.Button1, e);
         }
         UpdateMouseState(e);
-        if (properties.IsRightButtonPressed)
+        if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
         {
-            OpenNodeContextMenu();
+            OpenNodeContextMenu(requestVersion);
             e.Handled = true;
         }
     }
@@ -335,7 +364,24 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Alt) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
+        if (e.Key is Key.LeftShift or Key.RightShift)
+            HeldKeys.Add(e.Key);
+        if (EditorToolModel != null)
+            EditorToolModel.UniformResizeModifierDown = e.KeyModifiers.HasFlag(KeyModifiers.Shift) || IsHeld(Key.LeftShift, Key.RightShift);
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Alt) || e.KeyModifiers.HasFlag(KeyModifiers.Meta)
+            || (e.KeyModifiers.HasFlag(KeyModifiers.Control) && EditorToolModel?.ActiveTool != EditorTool.Resize))
+            return;
+
+        if (TryNudgeSelection(e.Key, e.KeyModifiers.HasFlag(KeyModifiers.Shift) || IsHeld(Key.LeftShift, Key.RightShift),
+            e.KeyModifiers.HasFlag(KeyModifiers.Control)))
+        {
+            HeldKeys.RemoveWhere(key => KeyDirection(key) != Vec2.Zero && CanNudgeSelection(key));
+            NudgeKeys.Add(e.Key);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
             return;
 
         switch (e.Key)
@@ -363,6 +409,12 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         base.OnKeyUp(e);
         if (HeldKeys.Remove(e.Key))
             e.Handled = true;
+        if (NudgeKeys.Remove(e.Key))
+            e.Handled = true;
+        if (EditorToolModel != null)
+            EditorToolModel.UniformResizeModifierDown = e.Key is Key.LeftShift or Key.RightShift
+                ? IsHeld(Key.LeftShift, Key.RightShift)
+                : e.KeyModifiers.HasFlag(KeyModifiers.Shift) || IsHeld(Key.LeftShift, Key.RightShift);
     }
 
     /// <inheritdoc/>
@@ -370,6 +422,9 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     {
         base.OnLostFocus(e);
         HeldKeys.Clear();
+        NudgeKeys.Clear();
+        if (EditorToolModel != null)
+            EditorToolModel.UniformResizeModifierDown = false;
     }
 
     /// <inheritdoc/>
@@ -384,6 +439,10 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
     /// <inheritdoc/>
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        ContextMenuRequestVersion++;
+        OpenContextMenu?.Close();
+        OpenContextMenu = null;
+        SuppressedMouseButtons.Clear();
         HookModel?.RemoveHook<ComponentFocusHook>(ComponentFocused);
         HookModel?.RemoveHook<ViewerCameraHook>(CameraRequested);
         HookModel?.RemoveHook<ViewerNodeContextHook>(NodeContextRequested);
@@ -459,13 +518,68 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 
         // Long pauses between frames shouldn't throw the camera far away
         elapsed = Math.Min(elapsed, 0.1);
-        var x = (IsHeld(Key.D, Key.Right) ? 1 : 0) - (IsHeld(Key.A, Key.Left) ? 1 : 0);
-        var y = (IsHeld(Key.S, Key.Down) ? 1 : 0) - (IsHeld(Key.W, Key.Up) ? 1 : 0);
+        var horizontalArrowsMoveCamera = !CanNudgeSelection(Key.Left);
+        var verticalArrowsMoveCamera = !CanNudgeSelection(Key.Up);
+        var x = (HeldKeys.Contains(Key.D) || horizontalArrowsMoveCamera && HeldKeys.Contains(Key.Right) ? 1 : 0)
+            - (HeldKeys.Contains(Key.A) || horizontalArrowsMoveCamera && HeldKeys.Contains(Key.Left) ? 1 : 0);
+        var y = (HeldKeys.Contains(Key.S) || verticalArrowsMoveCamera && HeldKeys.Contains(Key.Down) ? 1 : 0)
+            - (HeldKeys.Contains(Key.W) || verticalArrowsMoveCamera && HeldKeys.Contains(Key.Up) ? 1 : 0);
         if (x == 0 && y == 0)
             return;
 
         var speed = Camera.Speed * elapsed * (FastPan ? FastPanMultiplier : 1);
         Camera.Move(x * speed, y * speed);
+    }
+
+    private static Vec2 KeyDirection(Key key) => key switch
+    {
+        Key.Left => new Vec2(-1, 0),
+        Key.Right => new Vec2(1, 0),
+        Key.Up => new Vec2(0, -1),
+        Key.Down => new Vec2(0, 1),
+        _ => Vec2.Zero
+    };
+
+    private bool TryNudgeSelection(Key key, bool shift, bool shrink)
+    {
+        var direction = KeyDirection(key);
+        if (direction == Vec2.Zero || !CanNudgeSelection(key))
+            return false;
+
+        var step = shift ? SettingModel.GetContext<ViewerSettingContext>().ShiftMoveStep.Value : 1;
+        if (step < 1)
+        {
+            ViewModelBase.ResourceModel.Get<ILogModel>().Log("Cannot move selection: Shift Move Step must be at least 1.");
+            return true;
+        }
+        var hook = new ViewerNudgeHook { Project = Project, Components = NodeSelectionModel.SelectedNodes,
+            Tool = EditorToolModel.ActiveTool, Delta = direction * step, Shrink = shrink };
+        HookModel.Shoot(hook);
+        if (!hook.Handled)
+            ViewModelBase.ResourceModel.Get<ILogModel>().Log("Cannot move selection: the selected components are not available in the viewer.");
+        return true;
+    }
+
+    private bool CanNudgeSelection(Key key)
+    {
+        var selection = NodeSelectionModel;
+        var tool = EditorToolModel?.ActiveTool;
+        var propertyName = tool switch
+        {
+            EditorTool.Move => "Position",
+            EditorTool.Resize => "Size",
+            EditorTool.Origin => "Origin",
+            EditorTool.Rotate when key is Key.Left or Key.Right => "Rotation",
+            _ => null
+        };
+        return propertyName != null
+            && !EditorToolModel.SelectionInputSuspended && Project != null && Component != null
+            && selection != null && selection.Project == Project && selection.OpenedComponent == Component
+            && (tool is not (EditorTool.Origin or EditorTool.Rotate) || selection.SelectedNodes.Count == 1)
+            && selection.SelectedNodes.Any(node => node is { Removed: false }
+                && node.Properties.Any(property => property.Name == propertyName
+                    && (tool == EditorTool.Rotate ? property.Value is double : property.Value is Vec2)))
+            && HookModel != null;
     }
 
     private bool FastPan => IsHeld(Key.LeftShift, Key.RightShift);
@@ -511,9 +625,12 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
         if (!IsEffectivelyVisible)
             return;
 
-        // The game side reads the multi-select modifier from the tool model, since key state can't reach the fake mouse
+        // The game side reads modifiers from the tool model, since key state can't reach the fake mouse.
         if (EditorToolModel != null)
+        {
             EditorToolModel.MultiSelectModifierDown = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+            EditorToolModel.UniformResizeModifierDown = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        }
 
         var properties = e.GetCurrentPoint(this).Properties;
         var position = e.GetPosition(this);
@@ -529,10 +646,33 @@ public partial class TKViewer : BaseTkOpenGlControl, IViewer
 
     private void SetButtonState(GlfwMouseButton button, bool isDown)
     {
+        if (SuppressedMouseButtons.Contains(button))
+        {
+            MouseButtonsDown.Remove(button);
+            if (!isDown)
+                SuppressedMouseButtons.Remove(button);
+            return;
+        }
+
         if (isDown)
             MouseButtonsDown.Add(button);
         else
             MouseButtonsDown.Remove(button);
+    }
+
+    private void SuppressPressedButton(PointerUpdateKind kind)
+    {
+        var button = kind switch
+        {
+            PointerUpdateKind.LeftButtonPressed => GlfwMouseButton.Button1,
+            PointerUpdateKind.RightButtonPressed => GlfwMouseButton.Button2,
+            PointerUpdateKind.MiddleButtonPressed => GlfwMouseButton.Button3,
+            PointerUpdateKind.XButton1Pressed => GlfwMouseButton.Button4,
+            PointerUpdateKind.XButton2Pressed => GlfwMouseButton.Button5,
+            _ => (GlfwMouseButton?)null
+        };
+        if (button != null)
+            SuppressedMouseButtons.Add(button.Value);
     }
 
     private void SetWindowSize(Size size)
