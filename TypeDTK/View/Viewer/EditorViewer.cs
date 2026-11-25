@@ -217,13 +217,25 @@ namespace TypeDTK.View.Viewer
                 var id = $"{parent.FullParentPath}{parent.ID}";
                 if (!id.StartsWith(Game.Scenes.CurrentScene.ID))
                     id = $"{Game.Scenes.CurrentScene.ID}/{id}";
-                if (EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id) is Entity parentEntity)
+                var parentObject = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id);
+                if (parentObject is DrawStack parentStack)
+                {
+                    if (component.IsBasedOn(typeof(Drawable)))
+                        return parentStack.DrawableManager.Create(typeInfo, component.ID);
+                    if (component.IsBasedOn(typeof(Entity)))
+                        return Game.Scenes.CurrentScene.Entities.Create(typeInfo, component.ID, drawStack: parentStack);
+                }
+                else if (parentObject is Entity parentEntity)
                 {
                     if (component.IsBasedOn(typeof(Drawable)))
                         return parentEntity.Drawables.Create(typeInfo, component.ID);
                     if (component.IsBasedOn(typeof(Entity)))
                         return parentEntity.Entities.Create(typeInfo, component.ID);
                 }
+            }
+            if (component.IsBasedOn(typeof(DrawStack)))
+            {
+                return Game.Scenes.CurrentScene.CreateDrawStack(component.ID, component.Name);
             }
             if (component.IsBasedOn(typeof(Drawable)))
             {
@@ -288,15 +300,23 @@ namespace TypeDTK.View.Viewer
 
         private void InternalRemoveComponent(Project project, TypeOObject obj)
         {
-            if (obj is Entity entity)
+            if (obj is DrawStack drawStack)
+            {
+                Game.Scenes.CurrentScene.RemoveDrawStack(drawStack.ID);
+            }
+            else if (obj is Entity entity)
             {
                 entity.Remove();
                 if(entity.Parent is IHasEntities parentWithEntities)
                     parentWithEntities.Entities.ProcessRemovals();
+                else
+                    Game.Scenes.CurrentScene.Entities.ProcessRemovals();
             }
             else if (obj is Drawable drawable)
             {
-                if(drawable.Parent is IHasEntities parentWithEntities)
+                if (drawable.Parent is DrawStack ownerStack)
+                    ownerStack.DrawableManager.Destroy(drawable);
+                else if(drawable.Parent is IHasEntities parentWithEntities)
                     parentWithEntities.Drawables.Destroy(drawable);
                 else
                     Game.Scenes.CurrentScene.Drawables.Destroy(drawable);

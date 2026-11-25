@@ -27,7 +27,7 @@ namespace TypeDTK.View.Viewer
         public override void Draw()
         {
             Canvas?.Clear(ClearColor);
-            DrawStack.Draw(Canvas);
+            DrawAllStacks(Canvas);
             Canvas?.Present();
         }
 
