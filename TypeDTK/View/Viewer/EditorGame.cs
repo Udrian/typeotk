@@ -1,5 +1,7 @@
 ﻿using TypeOEngine.Typedeaf.Core.Common;
 using TypeD.View.Viewer;
+using TypeD.Models.Interfaces;
+using TypeD.ViewModel;
 using TypeOEngine.Typedeaf.Core.Engine.Graphics.Interfaces;
 using TypeOEngine.Typedeaf.Core;
 using TypeOEngine.Typedeaf.Desktop.Engine.Services;
@@ -44,9 +46,19 @@ namespace TypeDTK.View.Viewer
             Scenes.Draw();
         }
 
+        private ISimulationModel SimulationModel { get; } = ViewModelBase.ResourceModel?.Get<ISimulationModel>();
+
         public override void Update(double dt)
         {
-            Scenes?.Update(dt);
+            var simulationDt = SimulationModel == null ? dt : SimulationModel.ResolveDeltaTime(dt);
+            if (simulationDt == null)
+            {
+                // Paused: still let removed nodes leave the scene, but run no game logic
+                Scenes?.CurrentScene?.Entities.ProcessRemovals();
+                return;
+            }
+
+            Scenes?.Update(simulationDt.Value);
         }
     }
 }

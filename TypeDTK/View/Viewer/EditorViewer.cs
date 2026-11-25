@@ -167,12 +167,28 @@ namespace TypeDTK.View.Viewer
                     id = $"{Game.Scenes.CurrentScene.ID}/{id}";
 
                 var childTypeOObject = EditorTypeO.Context.GetTypeOObjectByID<TypeOObject>(id);
+                var createdLive = false;
+                if (childTypeOObject == null && !childComponent.Removed)
+                {
+                    // Component added in the editor but not yet part of the built (saved) game code
+                    childTypeOObject = InternalAddComponent(project, childComponent, childComponent.ParentComponent);
+                    if (childTypeOObject != null)
+                    {
+                        childComponent.ID = childTypeOObject.ID;
+                        createdLive = true;
+                    }
+                }
                 if(childTypeOObject == null)
                     throw new Exception($"Could not find the TypeO object for component '{childComponent.FullParentPath}{childComponent.ID}'");
 
                 if (childComponent.FullName != childTypeOObject.GetType().FullName)
                     throw new Exception($"Component type '{childComponent.FullName}' does not match the type of the created object '{childTypeOObject.GetType().FullName}'.");
                 HookModel.Shoot(new TypeOObjectAddedToViewHook() { Context = EditorTypeO.Context, TypeOObject = childTypeOObject, Component = childComponent });
+                if (createdLive)
+                {
+                    foreach (var property in childComponent.Properties.Where(p => p.Name != "ID" && !p.ReadOnly && childComponent.HasPropertyOverridesFor(p.Name)).ToList())
+                        HookModel.Shoot(new PropertyChangedHook() { Component = childComponent, Property = property });
+                }
             }
         }
 
